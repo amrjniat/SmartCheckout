@@ -1,5 +1,7 @@
-import { useState, useRef, type MouseEvent } from 'react';
-import Header from '../components/layout/Header';
+import { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
+
+type LayoutContext = { isRtl: boolean; setIsRtl: (value: boolean) => void };
 
 type TimeFilter = 'day' | 'week' | 'month';
 
@@ -137,165 +139,37 @@ interface HoverCardProps {
 }
 
 const HoverCard = ({ children, className = '', accentColor = 'blue' }: HoverCardProps) => {
-  const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
 
-  const accentColors = {
-    blue: { glow: 'rgba(59, 130, 246, 0.45)', border: 'rgba(59, 130, 246, 0.35)', shine: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, transparent 60%)' },
-    purple: { glow: 'rgba(168, 85, 247, 0.45)', border: 'rgba(168, 85, 247, 0.35)', shine: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, transparent 60%)' },
-    green: { glow: 'rgba(34, 197, 94, 0.45)', border: 'rgba(34, 197, 94, 0.35)', shine: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, transparent 60%)' },
-    orange: { glow: 'rgba(249, 115, 22, 0.45)', border: 'rgba(249, 115, 22, 0.35)', shine: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, transparent 60%)' }
+  const accentShadow = {
+    blue: 'rgba(59, 130, 246, 0.35)',
+    purple: 'rgba(168, 85, 247, 0.35)',
+    green: 'rgba(34, 197, 94, 0.35)',
+    orange: 'rgba(249, 115, 22, 0.35)'
   };
 
-  const currentAccent = accentColors[accentColor];
-
-  // دالة الحساب الفوري وحقن خصائص CSS المخصصة لتجنب Re-render وتفعيل الـ GPU
-  const processCoordinates = (e: MouseEvent<HTMLDivElement>, scaleValue: number) => {
-    const el = cardRef.current;
-    if (!el) return;
-
-    const rect = el.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const px = x / rect.width;
-    const py = y / rect.height;
-
-    const rx = (py - 0.5) * -16; // زاوية دوران واضحة ومدروسة
-    const ry = (px - 0.5) * 16;
-
-    // تحويل النطاق إلى [-1, 1] لحساب الـ Parallax الداخلي للعناصر بدقة
-    const mx = (px - 0.5) * 2;
-    const my = (py - 0.5) * 2;
-
-    el.style.setProperty('--rx', `${rx}deg`);
-    el.style.setProperty('--ry', `${ry}deg`);
-    el.style.setProperty('--mx', `${mx}`);
-    el.style.setProperty('--my', `${my}`);
-    el.style.setProperty('--glare-x', `${px * 100}%`);
-    el.style.setProperty('--glare-y', `${py * 100}%`);
-    el.style.setProperty('--scale', `${scaleValue}`);
-  };
-
-  const handleMouseEnter = (e: MouseEvent<HTMLDivElement>) => {
-    setIsHovered(true);
-    processCoordinates(e, 1.04); // تضخيم فوري عند الدخول (نقطة 4)
-  };
-
-  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    processCoordinates(e, 1.04);
-  };
-
-  const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
-    processCoordinates(e, 0.95); // انضغاط فوري عند النقر بدون انتظار الحركة (نقطة 3)
-  };
-
-  const handleMouseUp = (e: MouseEvent<HTMLDivElement>) => {
-    processCoordinates(e, 1.04);
-  };
-
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    const el = cardRef.current;
-    if (!el) return;
-
-    // إرجاع القيم للمركز بدقة لتصحيح التجميد (نقطة 11)
-    el.style.setProperty('--rx', '0deg');
-    el.style.setProperty('--ry', '0deg');
-    el.style.setProperty('--mx', '0');
-    el.style.setProperty('--my', '0');
-    el.style.setProperty('--glare-x', '50%');
-    el.style.setProperty('--glare-y', '50%');
-    el.style.setProperty('--scale', '1');
+  const accentBg = {
+    blue: 'bg-gradient-to-br from-blue-500 to-blue-600',
+    purple: 'bg-gradient-to-br from-purple-500 to-indigo-600',
+    green: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+    orange: 'bg-gradient-to-br from-orange-500 to-amber-600'
   };
 
   return (
     <div
-      className={`relative ${className}`}
-      style={{ 
-        perspective: '1400px', 
-        transformStyle: 'preserve-3d' 
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`relative ${accentBg[accentColor]} text-white p-5 sm:p-6 rounded-2xl cursor-pointer select-none overflow-hidden ${className}`}
+      style={{
+        transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
+        boxShadow: isHovered
+          ? `0 24px 40px -12px ${accentShadow[accentColor]}, 0 8px 16px -4px rgba(0,0,0,0.15)`
+          : '0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.06)',
+        transition: 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease'
       }}
     >
-      {/* الوهج الخلفي المستقر - Glow */}
-      <div
-        className="absolute -inset-1 rounded-2xl pointer-events-none blur-2xl"
-        style={{
-          background: currentAccent.glow,
-          opacity: isHovered ? 0.7 : 0,
-          transition: 'opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
-        }}
-      />
-
-      {/* جسم الكارت الرئيسي الخاضع للـ GPU المحرك بالكامل بالمتغيرات */}
-      <div
-        ref={cardRef}
-        onMouseEnter={handleMouseEnter}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        onMouseDown={handleMouseDown}
-        onMouseUp={handleMouseUp}
-        className="relative bg-white/95 backdrop-blur-md p-5 sm:p-6 rounded-2xl cursor-pointer select-none"
-        style={{
-          transformStyle: 'preserve-3d',
-          backfaceVisibility: 'hidden', // تسريع معالجة الرسوميات (نقطة 6)
-          contain: 'paint',             // عزل كامل للـ Paint للحصول على أعلى سلاسة
-          transform: isHovered
-            ? 'rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--scale, 1.04)) translateZ(10px)'
-            : 'rotateX(0deg) rotateY(0deg) scale(1) translateZ(0px)',
-          boxShadow: isHovered
-            ? `0 35px 60px -15px ${currentAccent.glow}, 0 0 0 1px ${currentAccent.border}, 0 15px 30px rgba(0,0,0,0.12)`
-            : '0 4px 6px -1px rgba(0,0,0,0.03), 0 2px 4px -1px rgba(0,0,0,0.02), 0 0 0 1px rgba(0,0,0,0.04)',
-          border: `1px solid ${isHovered ? currentAccent.border : 'transparent'}`,
-          // الغاء الـ transform تماماً من الانتقال أثناء الـ Hover لمنع التقطيع (نقطة 5)
-          transition: isHovered 
-            ? 'box-shadow 0.2s ease, border 0.2s ease' 
-            : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s ease, border 0.5s ease'
-        }}
-      >
-        {/* لمعان الخلفية المحيطي - Shine */}
-        <div
-          className="absolute inset-0 rounded-2xl pointer-events-none overflow-hidden"
-          style={{
-            background: currentAccent.shine,
-            opacity: isHovered ? 1 : 0,
-            transition: 'opacity 0.4s ease'
-          }}
-        />
-
-        {/* تأثير انعكاس البريق الضخم فائق النعومة - Glare (نقطة 2، 7، 11) */}
-        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none" style={{ transformStyle: 'preserve-3d' }}>
-          <div
-            className="absolute w-72 h-72 rounded-full mix-blend-overlay opacity-0"
-            style={{
-              background: 'radial-gradient(circle, rgba(255,255,255,0.85) 0%, transparent 75%)',
-              left: 'var(--glare-x, 50%)',
-              top: 'var(--glare-y, 50%)',
-              transform: 'translate(-50%, -50%) translateZ(1px)',
-              filter: 'blur(12px)',
-              willChange: 'left, top, opacity', // إجبار المتصفح على معالجة المواقع سينمائياً
-              opacity: isHovered ? 0.65 : 0,
-              transition: isHovered 
-                ? 'left .06s linear, top .06s linear, opacity 0.3s ease' 
-                : 'left 0.5s ease, top 0.5s ease, opacity 0.5s ease'
-            }}
-          />
-        </div>
-
-        {/* الخط العلوي الانسيابي المتوهج */}
-        <div
-          className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl"
-          style={{
-            background: `linear-gradient(90deg, transparent, ${currentAccent.border}, transparent)`,
-            transform: isHovered ? 'scaleX(1)' : 'scaleX(0)',
-            transition: 'transform 0.6s ease'
-          }}
-        />
-
-        {/* الحاوية الداخلية الحاضنة للـ 3D الفعلي لجميع الأبناء */}
-        <div style={{ transformStyle: 'preserve-3d' }} className="relative z-10 h-full w-full">
-          {children}
-        </div>
+      <div className="relative z-10 h-full w-full">
+        {children}
       </div>
     </div>
   );
@@ -353,21 +227,15 @@ const FilterButton = ({
 
 export default function Dashboard() {
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('day');
-  const [isArabic, setIsArabic] = useState(true);
-  const [isRtl, setIsRtl] = useState(true);
+  const { isRtl } = useOutletContext<LayoutContext>();
 
-  const toggleLanguage = () => {
-    setIsArabic((prev) => !prev);
-    setIsRtl((prev) => !prev);
-  };
-
-  const t = translations[isArabic ? 'ar' : 'en'];
+  const t = translations[isRtl ? 'ar' : 'en'];
   const currentData = dashboardMockData[activeFilter];
 
   const getTranslatedValue = (key: string): string => {
     const translationsAr = translations.ar as Record<string, string>;
     const translationsEn = translations.en as Record<string, string>;
-    return isArabic ? (translationsAr[key] || key) : (translationsEn[key] || key);
+    return isRtl ? (translationsAr[key] || key) : (translationsEn[key] || key);
   };
 
   const getFilterText = (): string => {
@@ -381,23 +249,8 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-right" dir={isRtl ? 'rtl' : 'ltr'}>
-      <Header title={t.title} subtitle={getFilterText()} activeFilter={activeFilter} onFilterChange={setActiveFilter} />
 
       <main className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm">
-          <div className="flex gap-2 bg-slate-100 p-1 rounded-xl text-sm font-medium">
-            <FilterButton active={activeFilter === 'day'} onClick={() => setActiveFilter('day')}>{t.filterDay}</FilterButton>
-            <FilterButton active={activeFilter === 'week'} onClick={() => setActiveFilter('week')}>{t.filterWeek}</FilterButton>
-            <FilterButton active={activeFilter === 'month'} onClick={() => setActiveFilter('month')}>{t.filterMonth}</FilterButton>
-          </div>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{t.title}</h1>
-            <p className="text-sm text-slate-500 mt-1">{getFilterText()}</p>
-          </div>
-          <button onClick={toggleLanguage} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-bold transition-all hover:scale-105 active:scale-95">
-            {isArabic ? 'English' : 'العربية'}
-          </button>
-        </div>
 
         {/* 💡 تطبيق الـ Parallax الحقيقي ثلاثي الأبعاد بتمرير إزاحات مختلفة ومستويات غائرة ومتطورة لكل عنصر (نقطة 1، 8، 9) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -406,7 +259,7 @@ export default function Dashboard() {
           <HoverCard accentColor="blue">
             <div className="flex justify-between items-start mb-4" style={{ transformStyle: 'preserve-3d' }}>
               <span 
-                className="text-sm font-semibold text-slate-600 block"
+                className="text-sm font-semibold text-white/90 block"
                 style={{ 
                   transform: 'translateZ(45px) translateX(calc(var(--mx, 0) * -4px)) translateY(calc(var(--my, 0) * -4px))',
                   backfaceVisibility: 'hidden'
@@ -415,7 +268,7 @@ export default function Dashboard() {
                 {t.cardSales}
               </span>
               <div 
-                className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-lg shadow-lg shadow-blue-200/50"
+                className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg"
                 style={{ 
                   transform: 'translateZ(75px) translateX(calc(var(--mx, 0) * -12px)) translateY(calc(var(--my, 0) * -12px))',
                   backfaceVisibility: 'hidden'
@@ -425,7 +278,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div 
-              className="text-2xl sm:text-3xl font-black text-slate-900 text-right tracking-tight"
+              className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight"
               style={{ 
                 transform: 'translateZ(100px) translateX(calc(var(--mx, 0) * -18px)) translateY(calc(var(--my, 0) * -18px))',
                 backfaceVisibility: 'hidden'
@@ -434,7 +287,7 @@ export default function Dashboard() {
               {currentData.sales}
             </div>
             <div 
-              className="text-sm text-slate-500 mt-1 block"
+              className="text-sm text-white/75 mt-1 block"
               style={{ 
                 transform: 'translateZ(30px) translateX(calc(var(--mx, 0) * -2px)) translateY(calc(var(--my, 0) * -2px))',
                 backfaceVisibility: 'hidden'
@@ -448,7 +301,7 @@ export default function Dashboard() {
           <HoverCard accentColor="purple">
             <div className="flex justify-between items-start mb-4" style={{ transformStyle: 'preserve-3d' }}>
               <span 
-                className="text-sm font-semibold text-slate-600 block"
+                className="text-sm font-semibold text-white/90 block"
                 style={{ 
                   transform: 'translateZ(45px) translateX(calc(var(--mx, 0) * -4px)) translateY(calc(var(--my, 0) * -4px))',
                   backfaceVisibility: 'hidden'
@@ -457,7 +310,7 @@ export default function Dashboard() {
                 {t.cardInvoices}
               </span>
               <div 
-                className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center text-lg shadow-lg shadow-purple-200/50"
+                className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg"
                 style={{ 
                   transform: 'translateZ(75px) translateX(calc(var(--mx, 0) * -12px)) translateY(calc(var(--my, 0) * -12px))',
                   backfaceVisibility: 'hidden'
@@ -467,7 +320,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div 
-              className="text-2xl sm:text-3xl font-black text-slate-900 text-right tracking-tight"
+              className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight"
               style={{ 
                 transform: 'translateZ(100px) translateX(calc(var(--mx, 0) * -18px)) translateY(calc(var(--my, 0) * -18px))',
                 backfaceVisibility: 'hidden'
@@ -476,7 +329,7 @@ export default function Dashboard() {
               {currentData.invoices}
             </div>
             <div 
-              className="text-sm text-slate-500 mt-1 block"
+              className="text-sm text-white/75 mt-1 block"
               style={{ 
                 transform: 'translateZ(30px) translateX(calc(var(--mx, 0) * -2px)) translateY(calc(var(--my, 0) * -2px))',
                 backfaceVisibility: 'hidden'
@@ -490,7 +343,7 @@ export default function Dashboard() {
           <HoverCard accentColor="green">
             <div className="flex justify-between items-start mb-4" style={{ transformStyle: 'preserve-3d' }}>
               <span 
-                className="text-sm font-semibold text-slate-600 block"
+                className="text-sm font-semibold text-white/90 block"
                 style={{ 
                   transform: 'translateZ(45px) translateX(calc(var(--mx, 0) * -4px)) translateY(calc(var(--my, 0) * -4px))',
                   backfaceVisibility: 'hidden'
@@ -499,7 +352,7 @@ export default function Dashboard() {
                 {t.cardProfit}
               </span>
               <div 
-                className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-lg shadow-lg shadow-green-200/50"
+                className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg"
                 style={{ 
                   transform: 'translateZ(75px) translateX(calc(var(--mx, 0) * -12px)) translateY(calc(var(--my, 0) * -12px))',
                   backfaceVisibility: 'hidden'
@@ -509,7 +362,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div 
-              className="text-2xl sm:text-3xl font-black text-slate-900 text-right tracking-tight"
+              className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight"
               style={{ 
                 transform: 'translateZ(100px) translateX(calc(var(--mx, 0) * -18px)) translateY(calc(var(--my, 0) * -18px))',
                 backfaceVisibility: 'hidden'
@@ -518,7 +371,7 @@ export default function Dashboard() {
               {currentData.profit}
             </div>
             <div 
-              className="text-sm text-slate-500 mt-1 block"
+              className="text-sm text-white/75 mt-1 block"
               style={{ 
                 transform: 'translateZ(30px) translateX(calc(var(--mx, 0) * -2px)) translateY(calc(var(--my, 0) * -2px))',
                 backfaceVisibility: 'hidden'
@@ -532,7 +385,7 @@ export default function Dashboard() {
           <HoverCard accentColor="orange">
             <div className="flex justify-between items-start mb-4" style={{ transformStyle: 'preserve-3d' }}>
               <span 
-                className="text-sm font-semibold text-slate-600 block"
+                className="text-sm font-semibold text-white/90 block"
                 style={{ 
                   transform: 'translateZ(45px) translateX(calc(var(--mx, 0) * -4px)) translateY(calc(var(--my, 0) * -4px))',
                   backfaceVisibility: 'hidden'
@@ -541,7 +394,7 @@ export default function Dashboard() {
                 {t.cardLowStock}
               </span>
               <div 
-                className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-lg shadow-lg shadow-orange-200/50"
+                className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg"
                 style={{ 
                   transform: 'translateZ(75px) translateX(calc(var(--mx, 0) * -12px)) translateY(calc(var(--my, 0) * -12px))',
                   backfaceVisibility: 'hidden'
@@ -551,7 +404,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div 
-              className="text-2xl sm:text-3xl font-black text-slate-900 text-right tracking-tight"
+              className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight"
               style={{ 
                 transform: 'translateZ(100px) translateX(calc(var(--mx, 0) * -18px)) translateY(calc(var(--my, 0) * -18px))',
                 backfaceVisibility: 'hidden'
@@ -560,7 +413,7 @@ export default function Dashboard() {
               {currentData.lowStock}
             </div>
             <div 
-              className="text-sm text-slate-500 mt-1 block"
+              className="text-sm text-white/75 mt-1 block"
               style={{ 
                 transform: 'translateZ(30px) translateX(calc(var(--mx, 0) * -2px)) translateY(calc(var(--my, 0) * -2px))',
                 backfaceVisibility: 'hidden'

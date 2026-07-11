@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
+import { Outlet } from 'react-router-dom';
 import PoswaveLogo from '../components/layout/PoswaveLogo';
 
-export default function Dashboard() {
+export default function DashboardLayout() {
   const [isRtl, setIsRtl] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTimeFilter, setActiveTimeFilter] = useState('day');
@@ -99,17 +100,6 @@ export default function Dashboard() {
     { id: 'team', text: isRtl ? 'إدارة الفريق والموظفين' : 'Team & Employees', active: false },
     { id: 'reports', text: isRtl ? 'التقارير والتحليلات البيانية' : 'Reports & Analytics', active: false },
     { id: 'settings', text: isRtl ? 'إعدادات النظام العامة' : 'General Settings', active: false },
-  ];
-
-  const recentInvoices = [
-    { id: '#INV-0842', customer: isRtl ? 'عميل نقدي' : 'Cash Customer', time: isRtl ? '12:40 م' : '12:40 PM', total: `150,000 ${t.currency}`, statusText: t.statusPaid },
-    { id: '#INV-0841', customer: isRtl ? 'شركة الأمل التجارية' : 'Al-Amal Trading Co.', time: isRtl ? '11:15 ص' : '11:15 AM', total: `1,200,000 ${t.currency}`, statusText: t.statusPending },
-    { id: '#INV-0840', customer: isRtl ? 'أحمد العلي' : 'Ahmad Al-Ali', time: isRtl ? '10:30 ص' : '10:30 AM', total: `85,000 ${t.currency}`, statusText: t.statusPaid },
-  ];
-
-  const topProducts = [
-    { name: isRtl ? 'زيت نباتي سيدي هشام 1ل' : 'Sidi Hisham Vegetable Oil 1L', sales: isRtl ? '412 قطعة' : '412 Pcs', percentage: '85%' },
-    { name: isRtl ? 'سكر الأسرة ناعم 1كغ' : 'Al-Osra Fine Sugar 1Kg', sales: isRtl ? '350 قطعة' : '350 Pcs', percentage: '70%' },
   ];
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -233,115 +223,9 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* الحاوية السفلية لبطاقات المبيعات والجدول */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-slate-50/50">
-          
-          {/* بطاقات الإحصائيات الأربعة (حقن مباشر ومترجم مع دعم اتجاه النصوص والأيقونات بالكامل) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {/* 1. بطاقة مبيعات اليوم (الزرقاء) */}
-            <div className={`p-5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm flex flex-col justify-between h-32 relative overflow-hidden`}>
-              <div className={`flex items-center justify-between w-full ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                <span className="text-xs font-bold opacity-90">{t.cardSales}</span>
-                <div className="p-2 rounded-xl bg-white/10 border border-white/10"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div>
-              </div>
-              <div className={`flex items-baseline gap-1.5 w-full mt-4 ${isRtl ? 'text-right justify-start' : 'text-left justify-end'}`}>
-                <span className="text-2xl font-black tracking-tight">2,500,000</span>
-                <span className="text-xs font-bold opacity-75">{t.currency}</span>
-              </div>
-            </div>
-
-            {/* 2. بطاقة عدد الفواتير (البنفسجية) */}
-            <div className={`p-5 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-sm flex flex-col justify-between h-32 relative overflow-hidden`}>
-              <div className={`flex items-center justify-between w-full ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                <span className="text-xs font-bold opacity-90">{t.cardInvoices}</span>
-                <div className="p-2 rounded-xl bg-white/10 border border-white/10"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></div>
-              </div>
-              <div className={`flex items-baseline gap-1.5 w-full mt-4 ${isRtl ? 'text-right justify-start' : 'text-left justify-end'}`}>
-                <span className="text-2xl font-black tracking-tight">145</span>
-                <span className="text-xs font-bold opacity-75">{t.unitInvoice}</span>
-              </div>
-            </div>
-
-            {/* 3. بطاقة الربح الصافي (الخضراء) */}
-            <div className={`p-5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm flex flex-col justify-between h-32 relative overflow-hidden`}>
-              <div className={`flex items-center justify-between w-full ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                <span className="text-xs font-bold opacity-90">{t.cardProfit}</span>
-                <div className="p-2 rounded-xl bg-white/10 border border-white/10"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg></div>
-              </div>
-              <div className={`flex items-baseline gap-1.5 w-full mt-4 ${isRtl ? 'text-right justify-start' : 'text-left justify-end'}`}>
-                <span className="text-2xl font-black tracking-tight">850,000</span>
-                <span className="text-xs font-bold opacity-75">{t.currency}</span>
-              </div>
-            </div>
-
-            {/* 4. بطاقة مواد منخفضة المخزون (البرتقالية) */}
-            <div className={`p-5 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-sm flex flex-col justify-between h-32 relative overflow-hidden`}>
-              <div className={`flex items-center justify-between w-full ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
-                <span className="text-xs font-bold opacity-90">{t.cardStock}</span>
-                <div className="p-2 rounded-xl bg-white/10 border border-white/10"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></div>
-              </div>
-              <div className={`flex items-baseline gap-1.5 w-full mt-4 ${isRtl ? 'text-right justify-start' : 'text-left justify-end'}`}>
-                <span className="text-2xl font-black tracking-tight">12</span>
-                <span className="text-xs font-bold opacity-75">{t.unitItem}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* الجداول السفلى */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-sm font-bold text-slate-800">{t.tableTitle}</h3>
-                <button className="text-xs font-bold text-blue-600 hover:text-blue-700">{t.viewAll}</button>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-start border-collapse min-w-[500px]">
-                  <thead>
-                    <tr className="border-b border-slate-100 text-slate-400 text-xs font-bold">
-                      <th className="pb-3 text-start">{t.thInvoice}</th>
-                      <th className="pb-3 text-start">{t.thCustomer}</th>
-                      <th className="pb-3 text-start">{t.thTime}</th>
-                      <th className="pb-3 text-start">{t.thTotal}</th>
-                      <th className="pb-3 text-center">{t.thStatus}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm divide-y divide-slate-50 text-slate-600">
-                    {recentInvoices.map((inv) => (
-                      <tr key={inv.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-3.5 font-bold text-blue-600 text-start">{inv.id}</td>
-                        <td className="py-3.5 font-medium text-slate-700 text-start">{inv.customer}</td>
-                        <td className="py-3.5 text-slate-400 text-xs text-start">{inv.time}</td>
-                        <td className="py-3.5 font-black text-slate-800 text-start">{inv.total}</td>
-                        <td className="py-3.5 text-center">
-                          <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600">
-                            {inv.statusText}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-800 mb-5 text-start">{t.topProductsTitle}</h3>
-              <div className="space-y-4">
-                {topProducts.map((prod, index) => (
-                  <div key={index} className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-bold text-slate-700">
-                      <span className="truncate max-w-[170px] text-start">{prod.name}</span>
-                      <span className="text-slate-400 font-medium">{prod.sales}</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${index === 0 ? 'bg-blue-500' : 'bg-indigo-500'}`} style={{ width: prod.percentage }}></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
+        {/* هنا مكان حقن الصفحة الحالية (Dashboard.tsx وغيرها) عبر React Router */}
+        <div className="flex-1 overflow-y-auto bg-slate-50/50">
+          <Outlet context={{ isRtl, setIsRtl }} />
         </div>
       </div>
 

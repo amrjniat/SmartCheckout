@@ -98,17 +98,19 @@ export default function WarehouseDashboard() {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.25); border-radius: 100px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.6); }
         
-        /* تأثير رفع البطاقة للأعلى */
+        /* تأثير رفع البطاقة للأعلى مع ظلال احترافية */
         .card-hover {
           transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
           transform: translateY(0);
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
         .card-hover:hover {
           transform: translateY(-8px);
-          box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
         }
         .card-hover:active, .card-hover.active {
-          transform: translateY(-2px);
+          transform: translateY(-4px);
+          box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.2);
         }
         
         /* تأثير جميع العناصر القابلة للنقر */
@@ -116,8 +118,8 @@ export default function WarehouseDashboard() {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .interactive:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+          transform: translateY(-3px);
+          box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.15);
         }
         .interactive:active {
           transform: translateY(-1px);
@@ -135,10 +137,11 @@ export default function WarehouseDashboard() {
         /* تأثير التنبيهات */
         .alert-hover {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
         .alert-hover:hover {
           transform: translateY(-3px);
-          box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
         
         /* تأثير شريط التقدم */
@@ -151,16 +154,18 @@ export default function WarehouseDashboard() {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .icon-hover:hover {
-          transform: translateY(-6px) scale(1.1);
+          transform: translateY(-5px);
+          box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.15);
         }
         
         /* تأثير البطاقات الداخلية */
         .inner-card {
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         .inner-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 10px 20px -6px rgba(0, 0, 0, 0.12);
+          transform: translateY(-6px);
+          box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
         }
       `}</style>
 
@@ -179,7 +184,7 @@ export default function WarehouseDashboard() {
 
           {/* شريط العناصر الأصلي والكامل */}
           <div className="hidden lg:flex items-center gap-1 flex-1 max-w-[65%] relative px-6">
-            <div ref={navRef} onMouseDown={handleMouseDown} onMouseLeave={handleMouseLeaveOrUp} onMouseUp={handleMouseLeaveOrUp} onMouseMove={handleMouseMove} className={`w-full flex items-center gap-1 overflow-x-auto custom-scrollbar pb-1.5 pt-1 scroll-smooth ${isMouseDown ? 'cursor-grabbing' : 'cursor-grab'}`}>
+            <div ref={navRef} onMouseDown={handleMouseDown} onMouseLeave={handleMouseLeaveOrUp} onMouseUp={handleMouseLeaveOrUp} onMouseMove={handleMouseMove} className={`w-full flex items-center gap-1 overflow-x-auto custom-3crollbar pb-1.5 pt-1 scroll-smooth ${isMouseDown ? 'cursor-grabbing' : 'cursor-grab'}`}>
               {menuItems.map((item) => (
                 <button key={item.id} className={`interactive px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap ${item.active ? 'bg-blue-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'}`}>{item.text}</button>
               ))}
@@ -210,11 +215,11 @@ export default function WarehouseDashboard() {
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-slate-50/50">
-          {/* بطاقات الإحصائيات - تأثير رفع للأعلى */}
+          {/* بطاقات الإحصائيات - تأثير رفع للأعلى مع ظلال احترافية */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             <div 
               onClick={() => handleCardPress('totalItems')}
-              className={`card-hover relative p-5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm flex flex-col justify-between h-32 overflow-hidden cursor-pointer ${activeCard === 'totalItems' ? 'active' : ''}`}
+              className={`card-hover relative p-5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white flex flex-col justify-between h-32 overflow-hidden cursor-pointer ${activeCard === 'totalItems' ? 'active' : ''}`}
             >
               <div className={`flex items-center justify-between w-full ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
                 <span className="text-sm font-bold opacity-90">{t.cardTotalItems}</span>
@@ -227,7 +232,7 @@ export default function WarehouseDashboard() {
 
             <div 
               onClick={() => handleCardPress('lowStock')}
-              className={`card-hover relative p-5 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-sm flex flex-col justify-between h-32 overflow-hidden cursor-pointer ${activeCard === 'lowStock' ? 'active' : ''}`}
+              className={`card-hover relative p-5 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white flex flex-col justify-between h-32 overflow-hidden cursor-pointer ${activeCard === 'lowStock' ? 'active' : ''}`}
             >
               <div className={`flex items-center justify-between w-full ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
                 <span className="text-sm font-bold opacity-90">{t.cardLowStock}</span>
@@ -240,7 +245,7 @@ export default function WarehouseDashboard() {
 
             <div 
               onClick={() => handleCardPress('inbound')}
-              className={`card-hover relative p-5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm flex flex-col justify-between h-32 overflow-hidden cursor-pointer ${activeCard === 'inbound' ? 'active' : ''}`}
+              className={`card-hover relative p-5 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex flex-col justify-between h-32 overflow-hidden cursor-pointer ${activeCard === 'inbound' ? 'active' : ''}`}
             >
               <div className={`flex items-center justify-between w-full ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
                 <span className="text-sm font-bold opacity-90">{t.cardInbound}</span>
@@ -253,7 +258,7 @@ export default function WarehouseDashboard() {
 
             <div 
               onClick={() => handleCardPress('outbound')}
-              className={`card-hover relative p-5 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white shadow-sm flex flex-col justify-between h-32 overflow-hidden cursor-pointer ${activeCard === 'outbound' ? 'active' : ''}`}
+              className={`card-hover relative p-5 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex flex-col justify-between h-32 overflow-hidden cursor-pointer ${activeCard === 'outbound' ? 'active' : ''}`}
             >
               <div className={`flex items-center justify-between w-full ${isRtl ? 'flex-row' : 'flex-row-reverse'}`}>
                 <span className="text-sm font-bold opacity-90">{t.cardOutbound}</span>
@@ -268,7 +273,7 @@ export default function WarehouseDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               {/* جدول الحركات */}
-              <div className="inner-card bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+              <div className="inner-card bg-white rounded-2xl border border-slate-100 p-5">
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-sm font-bold text-slate-800">{t.tableTitle}</h3>
                 </div>
@@ -301,7 +306,7 @@ export default function WarehouseDashboard() {
               </div>
 
               {/* أزرار الإجراءات السريعة */}
-              <div className="inner-card bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+              <div className="inner-card bg-white rounded-2xl border border-slate-100 p-5">
                 <h3 className="text-sm font-bold text-slate-800 mb-4">{t.quickActionsTitle}</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <button className="icon-hover flex flex-col items-center justify-center p-4 rounded-xl border border-blue-100 bg-blue-50/30 hover:bg-blue-50 text-blue-600 group cursor-pointer">
@@ -322,7 +327,7 @@ export default function WarehouseDashboard() {
 
             <div className="space-y-6">
               {/* حالة الأقسام الرئيسية */}
-              <div className="inner-card bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+              <div className="inner-card bg-white rounded-2xl border border-slate-100 p-5">
                 <h3 className="text-sm font-bold text-slate-800 mb-5 text-left">{t.categoriesTitle}</h3>
                 <div className="space-y-4">
                   {[{name: isRtl?'إلكترونيات':'Electronics', p:'80%'}, {name: isRtl?'قرطاسية':'Stationery', p:'45%'}, {name: isRtl?'مواد تنظيف':'Cleaning', p:'20%'}].map((cat, index) => (
@@ -342,7 +347,7 @@ export default function WarehouseDashboard() {
               </div>
 
               {/* تنبيهات المخزون */}
-              <div className="inner-card bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+              <div className="inner-card bg-white rounded-2xl border border-slate-100 p-5">
                 <h3 className="text-sm font-bold text-slate-800 mb-4 text-left">{t.alertsTitle}</h3>
                 <div className="space-y-3 text-xs font-bold">
                   <div className="alert-hover p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 text-left cursor-pointer">{t.alertEmpty}</div>
