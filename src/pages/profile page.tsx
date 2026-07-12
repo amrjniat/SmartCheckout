@@ -580,7 +580,7 @@ export function Navbar() {
             {t.auth.login}
           </Link>
           <Link
-            to="/register"
+            to="/signup"
             className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-500 rounded-xl hover:bg-blue-400 transition-all shadow-lg shadow-blue-500/30"
           >
             {t.auth.register}
@@ -628,7 +628,7 @@ export function Navbar() {
               {t.auth.login}
             </Link>
             <Link
-              to="/register"
+              to="/signup"
               className="px-5 py-3 text-sm font-semibold text-center text-white bg-blue-500 rounded-xl"
             >
               {t.auth.register}
@@ -683,7 +683,7 @@ export function Hero() {
 
             <div className="mt-8 flex flex-wrap gap-4">
               <Link
-                to="/register"
+                to="/signup"
                 className="group px-7 py-3.5 text-base font-semibold text-white bg-blue-500 rounded-xl hover:bg-blue-400 transition-all shadow-xl shadow-blue-500/30 flex items-center gap-2"
               >
                 {t.hero.ctaStart}
@@ -1126,7 +1126,7 @@ export function Footer() {
           <h3 className="text-2xl font-bold mb-2">{t.footer.ctaTitle}</h3>
           <p className="text-slate-400 mb-6">{t.footer.ctaSubtitle}</p>
           <Link
-            to="/register"
+            to="/signup"
             className="inline-block px-7 py-3 text-base font-semibold text-white bg-blue-500 rounded-xl hover:bg-blue-400 transition-all shadow-lg shadow-blue-500/30"
           >
             {t.footer.ctaButton}
