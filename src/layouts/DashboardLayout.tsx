@@ -1,11 +1,14 @@
 import { useState, useRef } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import PoswaveLogo from '../components/layout/PoswaveLogo';
 
 export default function DashboardLayout() {
   const [isRtl, setIsRtl] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTimeFilter, setActiveTimeFilter] = useState('day');
+
+  const location = useLocation();
+  const navigate = useNavigate();
   
   const navRef = useRef<HTMLDivElement>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
@@ -91,16 +94,20 @@ export default function DashboardLayout() {
   const t = isRtl ? translations.ar : translations.en;
 
   const menuItems = [
-    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', active: true },
-    { id: 'pos', text: isRtl ? 'شاشة البيع السريع (POS)' : 'Quick Sale Screen (POS)', active: false },
-    { id: 'products', text: isRtl ? 'إدارة المواد والمنتجات' : 'Products Management', active: false },
-    { id: 'inventory', text: isRtl ? 'المخزون والمستودعات' : 'Inventory & Warehouses', active: false },
-    { id: 'sales', text: isRtl ? 'الفواتير والمبيعات' : 'Sales & Invoices', active: false },
-    { id: 'customers', text: isRtl ? 'إدارة العملاء والزبائن' : 'Customers & Clients', active: false },
-    { id: 'team', text: isRtl ? 'إدارة الفريق والموظفين' : 'Team & Employees', active: false },
-    { id: 'reports', text: isRtl ? 'التقارير والتحليلات البيانية' : 'Reports & Analytics', active: false },
-    { id: 'settings', text: isRtl ? 'إعدادات النظام العامة' : 'General Settings', active: false },
-  ];
+    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: '/dashboard' },
+    { id: 'pos', text: isRtl ? 'شاشة البيع السريع (POS)' : 'Quick Sale Screen (POS)', path: '/pos' },
+    { id: 'products', text: isRtl ? 'إدارة المواد والمنتجات' : 'Products Management', path: '/products' },
+    { id: 'inventory', text: isRtl ? 'المخزون والمستودعات' : 'Inventory & Warehouses', path: null },
+    { id: 'sales', text: isRtl ? 'الفواتير والمبيعات' : 'Sales & Invoices', path: '/invoices' },
+    { id: 'customers', text: isRtl ? 'إدارة العملاء والزبائن' : 'Customers & Clients', path: null },
+    { id: 'team', text: isRtl ? 'إدارة الفريق والموظفين' : 'Team & Employees', path: null },
+    { id: 'reports', text: isRtl ? 'التقارير والتحليلات البيانية' : 'Reports & Analytics', path: null },
+    { id: 'settings', text: isRtl ? 'إعدادات النظام العامة' : 'General Settings', path: null },
+  ].map((item) => ({
+    ...item,
+    // العنصر النشط يُحدَّد فعلياً من مسار الصفحة الحالية في المتصفح
+    active: item.path !== null && location.pathname === item.path,
+  }));
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!navRef.current) return;
@@ -162,7 +169,15 @@ export default function DashboardLayout() {
             </button>
             <div ref={navRef} onMouseDown={handleMouseDown} onMouseLeave={handleMouseLeaveOrUp} onMouseUp={handleMouseLeaveOrUp} onMouseMove={handleMouseMove} className={`w-full flex items-center gap-1 overflow-x-auto custom-scrollbar pb-1.5 pt-1 scroll-smooth ${isMouseDown ? 'cursor-grabbing' : 'cursor-grab'}`}>
               {menuItems.map((item) => (
-                <button key={item.id} onDragStart={(e) => e.preventDefault()} className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${item.active ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'}`}>{item.text}</button>
+                <button
+                  key={item.id}
+                  onDragStart={(e) => e.preventDefault()}
+                  onClick={() => item.path && navigate(item.path)}
+                  disabled={!item.path}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${item.active ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'} ${!item.path ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {item.text}
+                </button>
               ))}
             </div>
             <button onClick={() => handleScrollClick('left')} className="absolute left-0 z-10 p-1 rounded-full bg-white/5 hover:bg-blue-600 text-white transition-all focus:outline-none">

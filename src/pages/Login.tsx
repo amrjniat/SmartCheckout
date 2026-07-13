@@ -151,14 +151,16 @@ const Login: React.FC = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const onSubmit = async (data: LoginFormData) => {
+const onSubmit = async (data: LoginFormData) => {
     try {
       // استدعاء دالة تسجيل الدخول التي أنشأناها في الخدمة
       await login(data.username, data.password);
 
       toast.success(t.successMsg);
-      navigate('/'); // التحويل للوحة التحكم بعد النجاح
+      
+      // تم التعديل هنا: التوجيه إلى صفحة الملف الشخصي بدلاً من الرئيسية
+  navigate('/dashboard');
+      
     } catch (error: any) {
       // عرض رسالة الخطأ التي تأتي من الباك إند إن وجدت
       const errorMessage = error.response?.data?.message || t.genericError;
