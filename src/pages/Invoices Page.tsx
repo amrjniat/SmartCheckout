@@ -30,7 +30,7 @@ interface Invoice {
   items: InvoiceItem[];
 }
 
-type OutletCtx = { isRtl: boolean; setIsRtl: (v: boolean) => void };
+type OutletCtx = { isRtl: boolean; setIsRtl: (v: boolean) => void; setPageData: React.Dispatch<React.SetStateAction<any>> };
 
 /* =========================================================
    بيانات تجريبية (Mock data)
@@ -399,7 +399,13 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
 export default function Invoices() {
   const ctx = useOutletContext<OutletCtx | null>();
   const isRtl = ctx?.isRtl ?? true;
+  const setPageData = ctx?.setPageData;
   const t = isRtl ? translations.ar : translations.en;
+
+  // إخفاء الشريط الرئيسي لهذه الصفحة فقط
+  useEffect(() => {
+    setPageData?.({ showHeader: false });
+  }, [setPageData]);
   const lang: 'ar' | 'en' = isRtl ? 'ar' : 'en';
 
   const [role, setRole] = useState<UserRole>('manager');

@@ -30,7 +30,7 @@ export default function PoswaveLogo({
     >
       {/* الأيقونة: حرف P + الموجة الفضية + السهم + رموز العملات */}
       <div
-        className="relative flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
+        className="relative flex-shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3"
         style={{ width: iconSize, height: iconSize }}
       >
         <svg viewBox="0 0 200 200" className="w-full h-full object-contain drop-shadow-md" fill="none" xmlns="http://www.w3.org/2000/svg">
