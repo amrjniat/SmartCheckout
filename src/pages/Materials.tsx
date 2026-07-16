@@ -1623,7 +1623,7 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 
 interface DashboardContext {
   isRtl: boolean;
@@ -1666,18 +1666,20 @@ export default function ProductsManagementPage() {
   // ==========================================
   // 2. حالات الصفحة والمخازن الـ State
   // ==========================================
-  const { isRtl, setPageData } = useOutletContext<DashboardContext>();
+  const { isRtl } = useOutletContext<DashboardContext>();
   const navigate = useNavigate();
-  const [activeRole, setActiveRole] = useState<UserRole>('manager'); 
-  const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
 
-  // إخفاء الشريط الرئيسي لهذه الصفحة فقط
+  // ✅ تحديد الدور تلقائياً حسب المسار: /warehouse/... => أمين مستودع، غير هيك => مدير
+  const [activeRole, setActiveRole] = useState<UserRole>(
+    location.pathname.startsWith('/warehouse') ? 'storekeeper' : 'manager'
+  );
+
   useEffect(() => {
-    setPageData({ showHeader: false });
-    return () => {
-      setPageData({ showHeader: true });
-    };
-  }, [setPageData]);
+    setActiveRole(location.pathname.startsWith('/warehouse') ? 'storekeeper' : 'manager');
+  }, [location.pathname]);
+
+  const [isLoading, setIsLoading] = useState(true);
 
   // حالات العدادات الإحصائية المتحركة
   const [countTotal, setCountTotal] = useState(0);
