@@ -402,9 +402,9 @@ export default function Invoices() {
   const setPageData = ctx?.setPageData;
   const t = isRtl ? translations.ar : translations.en;
 
-  // إخفاء الشريط الرئيسي لهذه الصفحة فقط
+  // استدعاء (إظهار) الشريط الرئيسي لهذه الصفحة
   useEffect(() => {
-    setPageData?.({ showHeader: false });
+    setPageData?.({ showHeader: true });
   }, [setPageData]);
   const lang: 'ar' | 'en' = isRtl ? 'ar' : 'en';
 

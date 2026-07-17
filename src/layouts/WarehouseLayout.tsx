@@ -228,11 +228,11 @@ export default function WarehouseLayout() {
 
   // 1. تحديد قائمة الأزرار الخاصة بالمستودع بشكل مستقل تماماً
   const defaultMenuItems: MenuItem[] = [
-    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: '/dashboard' },
+    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: '/warehouse' },
     { id: 'products', text: isRtl ? 'إدارة المواد والمنتجات' : 'Products Management', path: '/warehouse/products' },
     { id: 'inventory', text: isRtl ? 'المخزون والمستودعات' : 'Inventory & Warehouses', path: '/warehouse/inventory' },
-    { id: 'team', text: isRtl ? 'إدارة الفريق والموظفين' : 'Team & Employees', path: null },
-    { id: 'reports', text: isRtl ? ' التقارير والتحليلات البيانية للمخزون' : 'Reports & Analytics', path: null },
+    { id: 'team', text: isRtl ? 'الموردون' : 'Team & Employees', path:  '/warehouse/Suppliers'},
+    { id: 'reports', text: isRtl ? ' التقارير والتحليلات البيانية للمخزون' : 'Reports & Analytics', path: '/warehouse/reports' },
   ].map((item) => ({
     ...item,
     // تفعيل الزر برمجياً بناءً على المسار الحالي لتجنب أي مشاكل في إضاءة الزر
