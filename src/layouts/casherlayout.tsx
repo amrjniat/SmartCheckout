@@ -2,11 +2,9 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header, { type MenuItem, type TimeFilter } from '../components/layout/Header';
 import { type PageHeaderData } from './DashboardLayout';
-
-// بيانات افتراضية لأمين المستودع
 const defaultWarehouseData = {
   userName: 'عمرو جنيات',
-  userTitle: 'إدارة المستودع',
+  userTitle: 'الكاشير (المحاسب)',
   avatarChar: 'ع',
   langBtn: 'English',
 };
@@ -33,20 +31,16 @@ export default function WarehouseLayout() {
     avatarChar: pageData.avatarChar || defaultWarehouseData.avatarChar,
     langBtn: pageData.langBtn || (isRtl ? 'English' : 'العربية'),
   };
-
-  const t = {
+const t = {
     title: headerData.title || (isRtl ? 'إدارة المستودعات' : 'Warehouse Management'),
     subtitle: headerData.subtitle || (isRtl ? 'النظام المتخصص بمراقبة وحركة المخزون' : 'Specialized Inventory System'),
   };
-
-  // 1. تحديد قائمة الأزرار الخاصة بالمستودع بشكل مستقل تماماً
-  const defaultMenuItems: MenuItem[] = [
-    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: '/warehouse' },
-    { id: 'products', text: isRtl ? 'إدارة المواد والمنتجات' : 'Products Management', path: '/warehouse/products' },
-    { id: 'inventory', text: isRtl ? 'المخزون والمستودعات' : 'Inventory & Warehouses', path: '/warehouse/inventory' },
-    { id: 'team', text: isRtl ? 'الموردون' : 'Team & Employees', path:  '/warehouse/Suppliers'},
-    { id: 'reports', text: isRtl ? ' التقارير والتحليلات البيانية للمخزون' : 'Reports & Analytics', path: '/warehouse/reports' },
-  ].map((item) => ({
+const defaultMenuItems: MenuItem[] = [
+    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: '/cashier' },
+    { id: 'pos', text: isRtl ? 'شاشة البيع السريع (POS)' : 'Quick Sale Screen (POS)', path: '/pos' },
+    { id: 'sales', text: isRtl ? 'الفواتير والمبيعات' : 'Sales & Invoices', path: '/cashier/invoices' },
+      { id: 'clients', text: isRtl ? 'إدارة العملاء' : 'Client Management', path: '/cashier/clients' },
+].map((item) => ({
     ...item,
     // تفعيل الزر برمجياً بناءً على المسار الحالي لتجنب أي مشاكل في إضاءة الزر
     active: item.path !== null && location.pathname === item.path,
