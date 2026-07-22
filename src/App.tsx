@@ -1,3 +1,7 @@
+
+
+
+
 // import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 // import LandingPage from './pages/profile page';
 // import Login from './pages/Login';
@@ -7,6 +11,10 @@
 // import CashierDashboard from './pages/CashierDashboard';
 // import DashboardLayout from './layouts/DashboardLayout';
 // import WarehouseLayout from './layouts/WarehouseLayout';
+// import CashierLayout from './layouts/casherlayout';
+
+
+// import ClientsPage from './pages/ClientsPage';
 
 // // استيراد صفحة البيع السريع
 // import QuickSalePage from './pages/QuickSaleScreen';
@@ -25,6 +33,8 @@
 
 // // استيراد صفحة تقارير وتحليلات المخزون
 // import InventoryReports from './pages/WarehouseReports';
+// // استيراد صفحة إدارة الفريق والموظفين
+// import EmployeeManagement from './pages/Teammanagement';
 
 // function App() {
 //   return (
@@ -38,8 +48,6 @@
 //         {/* --- نظام الإدارة العام --- */}
 //         <Route element={<DashboardLayout />}>
 //           <Route path="/dashboard" element={<Dashboard />} />
-//           <Route path="/pos" element={<QuickSalePage />} />
-//           <Route path="/cashier" element={<CashierDashboard />} />
 //           <Route path="/invoices" element={<InvoicesPage />} />
 //           <Route path="/products" element={<ProductsManagementPage />} />
 
@@ -51,6 +59,25 @@
 
 //           {/* مسار تقارير المخزون متاح للمدير ضمن لوحة التحكم العامة */}
 //           <Route path="/reports" element={<InventoryReports />} />
+
+//           {/* نفس لوحة الكاشير، بس بهيدر الإدارة العامة (يشوفها المدير من لوحته) */}
+//           <Route path="/dashboard/cashier" element={<CashierDashboard />} />
+
+//           <Route path="/clients" element={<ClientsPage />} />
+//   <Route path="/team" element={<EmployeeManagement />} />
+
+//         </Route>
+
+//         {/* --- نظام الكاشير المستقل (هيدر مخصص للكاشير فقط) --- */}
+//         <Route element={<CashierLayout />}>
+//           <Route path="/cashier" element={<CashierDashboard />} />
+//           <Route path="/pos" element={<QuickSalePage />} />
+
+//           {/* نفس صفحة الفواتير، بس بهيدر الكاشير */}
+//           <Route path="/cashier/invoices" element={<InvoicesPage />} />
+
+//           <Route path="/cashier/clients" element={<ClientsPage />} />
+          
 //         </Route>
 
 //         {/* --- نظام المستودع المستقل (هيدر مختلف تماماً عن نظام الإدارة العام) --- */}
@@ -68,6 +95,9 @@
 
 //           {/* نفس صفحة تقارير المخزون، بس بهيدر المستودع (لأمين المستودع) */}
 //           <Route path="/warehouse/reports" element={<InventoryReports />} />
+
+//           {/* نفس صفحة الفواتير، بس بهيدر المستودع (لأمين المستودع) */}
+//           <Route path="/warehouse/invoices" element={<InvoicesPage />} />
 //         </Route>
 
 //         {/* توجيه المسارات غير المعروفة إلى الصفحة الرئيسية */}
@@ -78,6 +108,8 @@
 // }
 
 // export default App;
+
+
 
 
 
@@ -116,6 +148,11 @@ import SuppliersPage from './pages/Suppliers';
 
 // استيراد صفحة تقارير وتحليلات المخزون
 import InventoryReports from './pages/WarehouseReports';
+// استيراد صفحة إدارة الفريق والموظفين
+import EmployeeManagement from './pages/Teammanagement';
+
+// استيراد صفحة الإعدادات العامة
+import GeneralSettings from './pages/GeneralSettings';
 
 function App() {
   return (
@@ -145,6 +182,10 @@ function App() {
           <Route path="/dashboard/cashier" element={<CashierDashboard />} />
 
           <Route path="/clients" element={<ClientsPage />} />
+  <Route path="/team" element={<EmployeeManagement />} />
+
+          {/* مسار الإعدادات العامة، متاح للمدير فقط ضمن لوحة التحكم العامة */}
+          <Route path="/settings" element={<GeneralSettings/>} />
 
         </Route>
 

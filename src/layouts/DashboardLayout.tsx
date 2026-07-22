@@ -64,9 +64,9 @@ export default function DashboardLayout() {
     { id: 'sales', text: isRtl ? 'الفواتير والمبيعات' : 'Sales & Invoices', path: '/invoices' },
     { id: 'team', text: isRtl ? 'الموردون' : 'Team & Employees', path:  '/Suppliers'},
     { id: 'customers', text: isRtl ? 'إدارة العملاء والزبائن' : 'Customers & Clients', path: '/clients' },
-    { id: 'team', text: isRtl ? 'إدارة الفريق والموظفين' : 'Team & Employees', path: null },
+    { id: 'team', text: isRtl ? 'إدارة الفريق والموظفين' : 'Team & Employees', path:'/team'},
     { id: 'reports', text: isRtl ? 'التقارير والتحليلات البيانية' : 'Reports & Analytics', path: '/reports' },
-    { id: 'settings', text: isRtl ? 'إعدادات النظام العامة' : 'General Settings', path: null },
+    { id: 'settings', text: isRtl ? 'إعدادات النظام العامة' : 'General Settings', path:'/settings' },
   ].map((item) => ({
     ...item,
     active: item.path !== null && location.pathname === item.path,
