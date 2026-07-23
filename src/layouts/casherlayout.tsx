@@ -37,7 +37,7 @@ const t = {
   };
 const defaultMenuItems: MenuItem[] = [
     { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: '/cashier' },
-    { id: 'pos', text: isRtl ? 'شاشة البيع السريع (POS)' : 'Quick Sale Screen (POS)', path: '/pos' },
+    { id: 'pos', text: isRtl ? 'شاشة البيع السريع (POS)' : 'Quick Sale Screen (POS)', path: '/cashier/pos' },
     { id: 'sales', text: isRtl ? 'الفواتير والمبيعات' : 'Sales & Invoices', path: '/cashier/invoices' },
       { id: 'clients', text: isRtl ? 'إدارة العملاء' : 'Client Management', path: '/cashier/clients' },
 ].map((item) => ({

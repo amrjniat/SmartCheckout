@@ -44,7 +44,7 @@ export default function WarehouseLayout() {
     { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: '/warehouse' },
     { id: 'products', text: isRtl ? 'إدارة المواد والمنتجات' : 'Products Management', path: '/warehouse/products' },
     { id: 'inventory', text: isRtl ? 'المخزون والمستودعات' : 'Inventory & Warehouses', path: '/warehouse/inventory' },
-    { id: 'team', text: isRtl ? 'الموردون' : 'Team & Employees', path:  '/warehouse/Suppliers'},
+    { id: 'suppliers', text: isRtl ? 'الموردون' : 'Team & Employees', path:  '/warehouse/Suppliers'},
     { id: 'reports', text: isRtl ? ' التقارير والتحليلات البيانية للمخزون' : 'Reports & Analytics', path: '/warehouse/reports' },
   ].map((item) => ({
     ...item,
