@@ -74,7 +74,8 @@ function App() {
         {/* --- نظام الكاشير المستقل (هيدر مخصص للكاشير فقط) --- */}
         <Route element={<CashierLayout />}>
           <Route path="/cashier" element={<CashierDashboard />} />
-          <Route path="/pos" element={<QuickSalePage />} />
+          <Route path="/cashier/pos" element={<QuickSalePage />} />
+    
 
           {/* نفس صفحة الفواتير، بس بهيدر الكاشير */}
           <Route path="/cashier/invoices" element={<InvoicesPage />} />

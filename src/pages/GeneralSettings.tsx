@@ -243,7 +243,7 @@ export default function GeneralSettings() {
   );
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="flex h-screen bg-[#F8FAFC] text-gray-800 font-sans">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="flex h-screen bg-gradient-to-b from-[#F8FAFC] to-white text-gray-800 font-sans">
 
       {/* Sidebar */}
       <aside className={`w-72 bg-white ${isRtl ? 'border-l' : 'border-r'} border-gray-200 flex flex-col shadow-sm z-10`}>
@@ -267,9 +267,9 @@ export default function GeneralSettings() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all text-sm font-medium ${
+                className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-300 text-sm font-medium ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 shadow-sm border border-blue-100/50'
+                    ? 'bg-gradient-to-l from-blue-50 to-indigo-50 text-blue-700 shadow-sm border border-blue-100/60'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                 }`}
               >
@@ -311,21 +311,21 @@ export default function GeneralSettings() {
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-8 pb-32">
-          <div className="max-w-4xl mx-auto space-y-6">
+          <div className="max-w-4xl mx-auto space-y-4">
 
             {/* 1. Company Info */}
             {activeTab === 'company' && (
               <>
                 <SettingsCard title={t.companyLogo}>
-                  <div className="flex items-center gap-6">
-                    <div className="w-28 h-28 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-100 hover:border-blue-400 transition-all">
-                      <Upload size={28} className="mb-2 text-gray-400" />
-                      <span className="text-sm font-medium">{t.uploadLogo}</span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 cursor-pointer hover:bg-gray-100 hover:border-blue-400 transition-all">
+                      <Upload size={18} className="mb-1 text-gray-400" />
+                      <span className="text-[11px] font-medium">{t.uploadLogo}</span>
                     </div>
-                    <div className="flex-1 space-y-3">
-                      <div className="flex gap-3">
-                        <button className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">{t.previewLogo}</button>
-                        <button className="px-4 py-2 text-red-600 bg-red-50 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors">{t.remove}</button>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex gap-2">
+                        <button className="px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium hover:bg-gray-50 transition-colors">{t.previewLogo}</button>
+                        <button className="px-3 py-1.5 text-red-600 bg-red-50 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors">{t.remove}</button>
                       </div>
                       <p className="text-xs text-gray-500">{t.logoFormats}</p>
                       <p className="text-xs text-gray-400">{t.lastUpdate}</p>
@@ -334,21 +334,21 @@ export default function GeneralSettings() {
                 </SettingsCard>
 
                 <SettingsCard title={t.companyData}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <InputField label={t.companyName} defaultValue={t.companyNameValue} onChange={handleInputChange} isRtl={isRtl} />
                     <InputField label={t.branchName} defaultValue={t.branchNameValue} onChange={handleInputChange} isRtl={isRtl} />
                   </div>
                 </SettingsCard>
 
                 <SettingsCard title={t.contactInfo}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <InputField label={t.phone} defaultValue="+963 XX XXX XXXX" dir="ltr" onChange={handleInputChange} isRtl={isRtl} />
                     <InputField label={t.email} defaultValue="info@company.com" dir="ltr" onChange={handleInputChange} isRtl={isRtl} />
                   </div>
                 </SettingsCard>
 
                 <SettingsCard title={t.taxData}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <InputField label={t.taxNumber} defaultValue="123456789" onChange={handleInputChange} tooltip={t.taxNumberTooltip} isRtl={isRtl} />
                     <InputField label={t.commercialRegister} onChange={handleInputChange} isRtl={isRtl} />
                   </div>
@@ -363,7 +363,7 @@ export default function GeneralSettings() {
             {/* 2. System Settings */}
             {activeTab === 'system' && (
               <SettingsCard title={t.basicSettings}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <InputField label={t.systemName} defaultValue="SmartCheckout POS" onChange={handleInputChange} isRtl={isRtl} />
                   <SelectField label={t.timezone} options={['Asia/Damascus', 'Asia/Riyadh']} dir="ltr" onChange={handleInputChange} />
                   <SelectField label={t.dateFormat} options={['DD/MM/YYYY', 'YYYY/MM/DD']} dir="ltr" onChange={handleInputChange} />
@@ -376,7 +376,7 @@ export default function GeneralSettings() {
             {activeTab === 'invoice' && (
               <>
                 <SettingsCard title={t.invoiceNumbering}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <InputField label={t.invoicePrefix} defaultValue="INV-" dir="ltr" onChange={handleInputChange} isRtl={isRtl} />
                     <InputField label={t.invoicePadding} defaultValue="6" type="number" dir="ltr" onChange={handleInputChange} isRtl={isRtl} />
                     <InputField label={t.nextNumber} value="INV-000001" disabled dir="ltr" isRtl={isRtl} />
@@ -385,7 +385,7 @@ export default function GeneralSettings() {
 
                 <SettingsCard title={t.printOptions}>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
                       <InputField label={t.autoPrintCopies} defaultValue="1" type="number" onChange={handleInputChange} isRtl={isRtl} />
                       <InputField label={t.invoiceFooter} defaultValue={t.invoiceFooterValue} onChange={handleInputChange} isRtl={isRtl} />
                     </div>
@@ -400,7 +400,7 @@ export default function GeneralSettings() {
             {activeTab === 'currency' && (
               <>
                 <SettingsCard title={t.currencySettings}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <SelectField label={t.defaultCurrency} options={[t.currencySyp, t.currencyUsd]} onChange={handleInputChange} />
                     <InputField label={t.currencySymbol} defaultValue={t.currencySymbolValue} onChange={handleInputChange} isRtl={isRtl} />
                     <SelectField label={t.decimalPlaces} options={['0', '1', '2', '3']} onChange={handleInputChange} />
@@ -409,7 +409,7 @@ export default function GeneralSettings() {
                 </SettingsCard>
 
                 <SettingsCard title={t.taxes}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                     <InputField label={t.defaultTaxRate} defaultValue="11" type="number" dir="ltr" onChange={handleInputChange} isRtl={isRtl} />
                     <SelectField label={t.taxCalcMethod} options={[t.taxAfterDiscount, t.taxBeforeDiscount]} onChange={handleInputChange} />
                   </div>
@@ -421,7 +421,7 @@ export default function GeneralSettings() {
             {/* 5. Inventory Settings */}
             {activeTab === 'inventory' && (
               <SettingsCard title={t.stockMovement}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
                   <InputField label={t.defaultAlertThreshold} defaultValue="10" type="number" dir="ltr" onChange={handleInputChange} isRtl={isRtl} />
                 </div>
                 <div className="space-y-4">
@@ -436,7 +436,7 @@ export default function GeneralSettings() {
             {/* 6. Language */}
             {activeTab === 'language' && (
               <SettingsCard title={t.interfaceLanguageSettings}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
                   <SelectField label={t.defaultLanguage} options={[t.optArabic, t.optEnglish]} onChange={handleInputChange} />
                   <SelectField label={t.defaultDirection} options={[t.dirRtl, t.dirLtr]} dir="ltr" onChange={handleInputChange} />
                 </div>
@@ -458,11 +458,11 @@ export default function GeneralSettings() {
           <button
             onClick={handleSave}
             disabled={!hasUnsavedChanges && !isSaving && !isSaved}
-            className={`flex items-center gap-2 px-8 py-2.5 text-sm font-medium text-white rounded-lg transition-all ${
+            className={`flex items-center gap-2 px-8 py-2.5 text-sm font-medium text-white rounded-lg transition-all duration-300 shadow-md hover:-translate-y-0.5 ${
               isSaved
-                ? 'bg-green-600 hover:bg-green-700'
-                : 'bg-blue-600 hover:bg-blue-700'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                ? 'bg-gradient-to-br from-green-600 to-emerald-800 shadow-emerald-900/30 hover:from-green-700 hover:to-emerald-900'
+                : 'bg-gradient-to-br from-blue-600 to-indigo-800 shadow-blue-900/30 hover:from-blue-700 hover:to-indigo-900'
+            } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0`}
           >
             {isSaving ? (
               <>
@@ -491,8 +491,8 @@ export default function GeneralSettings() {
 
 function SettingsCard({ title, children }: { title: string, children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-[12px] shadow-sm border border-gray-100 p-6">
-      <h3 className="text-base font-semibold text-gray-800 mb-5 pb-3 border-b border-gray-50">{title}</h3>
+    <div className="bg-white rounded-[12px] shadow-sm border border-gray-100 p-3 hover:shadow-md transition-shadow duration-300">
+      <h3 className="text-xs font-semibold text-gray-800 mb-2 pb-1.5 border-b border-gray-50">{title}</h3>
       {children}
     </div>
   );
@@ -500,13 +500,13 @@ function SettingsCard({ title, children }: { title: string, children: React.Reac
 
 function InputField({ label, tooltip, isRtl = true, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string, tooltip?: string, isRtl?: boolean }) {
   return (
-    <div className="flex flex-col gap-2 relative group">
-      <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+    <div className="flex flex-col gap-1.5 relative group">
+      <label className="text-xs font-medium text-gray-700 flex items-center gap-1">
         {label}
         {tooltip && (
           <div className="relative flex items-center">
-            <Info size={14} className="text-gray-400 hover:text-blue-500 cursor-help transition-colors" />
-            <div className={`absolute bottom-full ${isRtl ? 'right-1/2 translate-x-1/2' : 'left-1/2 -translate-x-1/2'} mb-2 w-48 p-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 text-center`}>
+            <Info size={12} className="text-gray-400 hover:text-blue-500 cursor-help transition-colors" />
+            <div className={`absolute bottom-full ${isRtl ? 'right-1/2 translate-x-1/2' : 'left-1/2 -translate-x-1/2'} mb-2 w-40 p-1.5 bg-gray-800 text-white text-[11px] rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 text-center`}>
               {tooltip}
               <div className={`absolute top-full ${isRtl ? 'right-1/2 translate-x-1/2' : 'left-1/2 -translate-x-1/2'} border-4 border-transparent border-t-gray-800`}></div>
             </div>
@@ -514,7 +514,7 @@ function InputField({ label, tooltip, isRtl = true, ...props }: React.InputHTMLA
         )}
       </label>
       <input
-        className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all disabled:bg-gray-100 disabled:text-gray-500 text-sm"
+        className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all disabled:bg-gray-100 disabled:text-gray-500 text-xs"
         {...props}
       />
     </div>
@@ -523,10 +523,10 @@ function InputField({ label, tooltip, isRtl = true, ...props }: React.InputHTMLA
 
 function SelectField({ label, options, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { label: string, options: string[] }) {
   return (
-    <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs font-medium text-gray-700">{label}</label>
       <select
-        className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-sm appearance-none cursor-pointer"
+        className="px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-all text-xs appearance-none cursor-pointer"
         {...props}
       >
         {options.map((opt, i) => (
@@ -539,17 +539,17 @@ function SelectField({ label, options, ...props }: React.SelectHTMLAttributes<HT
 
 function CheckboxField({ label, tooltip, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label: string, tooltip?: string }) {
   return (
-    <label className={`flex items-start gap-3 cursor-pointer group p-3 rounded-xl border border-transparent hover:border-gray-100 hover:bg-gray-50 transition-all -mx-3`}>
+    <label className={`flex items-start gap-2 cursor-pointer group p-2 rounded-lg border border-transparent hover:border-gray-100 hover:bg-gray-50 transition-all -mx-2`}>
       <div className="pt-0.5">
         <input
           type="checkbox"
-          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer transition-colors"
+          className="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer transition-colors"
           {...props}
         />
       </div>
       <div className="flex flex-col">
-        <span className="text-sm text-gray-700 font-medium">{label}</span>
-        {tooltip && <span className="text-xs text-gray-500 mt-1">{tooltip}</span>}
+        <span className="text-xs text-gray-700 font-medium">{label}</span>
+        {tooltip && <span className="text-[11px] text-gray-500 mt-0.5">{tooltip}</span>}
       </div>
     </label>
   );

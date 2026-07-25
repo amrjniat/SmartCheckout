@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import Header, { type MenuItem, type TimeFilter } from '../components/layout/Header';
+import Header, { type MenuItem, type TimeFilter } from '../components/layout/header2';
 import { type PageHeaderData } from './DashboardLayout';
 
 // بيانات افتراضية لأمين المستودع

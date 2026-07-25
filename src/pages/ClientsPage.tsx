@@ -167,30 +167,30 @@ export default function CustomersPage() {
       </div>
 
       {/* Stat Cards - DISTINCT COLORS, SQUARE */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid w-full grid-cols-2 md:grid-cols-4 gap-3 mb-8">
         <StatCard 
           title={t.totalCustomers} 
           value={customers.length.toString()} 
-          icon={<Users size={28} />} 
+          icon={<Users size={17} />} 
           theme="blue"
         />
         <StatCard 
           title={t.newCustomers} 
           value="45" 
-          icon={<UserPlus size={28} />} 
+          icon={<UserPlus size={17} />} 
           theme="amber"
         />
         <StatCard 
           title={t.activeCustomers} 
           value="880" 
-          icon={<Activity size={28} />} 
+          icon={<Activity size={17} />} 
           theme="emerald"
         />
         <StatCard 
           title={t.totalSales} 
           value="12,450,000" 
           currency={t.currency} 
-          icon={<DollarSign size={28} />} 
+          icon={<DollarSign size={17} />} 
           theme="indigo"
         />
       </div>
@@ -383,17 +383,17 @@ const StatCard = ({ title, value, icon, currency = '', theme }: any) => {
     <div
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`relative ${th.bg} text-white p-6 rounded-2xl flex flex-col items-center justify-center text-center cursor-pointer select-none overflow-hidden aspect-square`}
+      className={`relative ${th.bg} text-white p-2.5 rounded-xl flex min-h-[125px] flex-col items-center justify-center text-center cursor-pointer select-none overflow-hidden`}
       style={{
-        transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
+        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
         boxShadow: isHovered
-          ? `0 24px 40px -12px ${th.shadow}, 0 8px 16px -4px rgba(0,0,0,0.15)`
-          : '0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.06)',
+          ? `0 18px 28px -12px ${th.shadow}, 0 6px 12px -4px rgba(0,0,0,0.14)`
+          : '0 3px 5px -1px rgba(0,0,0,0.08), 0 2px 3px -1px rgba(0,0,0,0.05)',
         transition: 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease',
       }}
     >
       <div
-        className="w-14 h-14 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center mb-3"
+        className="w-6 h-6 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center mb-1.5 text-sm"
         style={{
           transform: isHovered ? 'scale(1.1)' : 'scale(1)',
           transition: 'transform 0.3s ease',
@@ -402,8 +402,8 @@ const StatCard = ({ title, value, icon, currency = '', theme }: any) => {
         {icon}
       </div>
       <div>
-        <h3 className="text-xs font-bold mb-1 opacity-80">{title}</h3>
-        <p className="text-2xl font-black">{value} <span className="text-xs font-medium opacity-60">{currency}</span></p>
+        <h3 className="text-[10px] font-bold mb-0.5 opacity-80">{title}</h3>
+        <p className="text-sm font-black leading-tight">{value} <span className="text-[9px] font-medium opacity-60">{currency}</span></p>
       </div>
     </div>
   );

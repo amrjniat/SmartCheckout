@@ -69,7 +69,7 @@ export default function EmployeeManagement() {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen font-sans" dir="rtl">
+    <div className="p-6 bg-gradient-to-b from-slate-50 via-white to-slate-50/70 min-h-screen font-sans" dir="rtl">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">إدارة الفريق والموظفين</h1>
@@ -78,14 +78,14 @@ export default function EmployeeManagement() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon={<Users className="text-blue-600" />} title="إجمالي الموظفين" value="18" bgColor="bg-blue-100" />
-        <StatCard icon={<UserCheck className="text-green-600" />} title="الموظفون النشطون" value="15" bgColor="bg-green-100" />
-        <StatCard icon={<ShoppingCart className="text-purple-600" />} title="الكاشير" value="8" bgColor="bg-purple-100" />
-        <StatCard icon={<Package className="text-orange-600" />} title="أمناء المستودعات" value="4" bgColor="bg-orange-100" />
+        <StatCard icon={<Users className="w-6 h-6" />} title="إجمالي الموظفين" value="18" accent="blue" />
+        <StatCard icon={<UserCheck className="w-6 h-6" />} title="الموظفون النشطون" value="15" accent="emerald" />
+        <StatCard icon={<ShoppingCart className="w-6 h-6" />} title="الكاشير" value="8" accent="purple" />
+        <StatCard icon={<Package className="w-6 h-6" />} title="أمناء المستودعات" value="4" accent="orange" />
       </div>
 
       {/* Toolbar: Search & Actions */}
-      <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+      <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6 bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100">
         <div className="relative w-full lg:w-1/3">
           <Search className="absolute right-3 top-2.5 text-gray-400 w-5 h-5" />
           <input 
@@ -97,7 +97,7 @@ export default function EmployeeManagement() {
           />
         </div>
         <div className="flex gap-2 w-full lg:w-auto overflow-x-auto">
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap">
+          <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-br from-blue-600 to-indigo-800 text-white rounded-lg hover:from-blue-700 hover:to-indigo-900 transition-all duration-300 shadow-md shadow-blue-900/30 hover:-translate-y-0.5 whitespace-nowrap">
             <Plus className="w-4 h-4" /> إضافة موظف
           </button>
           <button className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -110,10 +110,10 @@ export default function EmployeeManagement() {
       </div>
 
       {/* Data Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-gradient-to-l from-gray-50 to-white border-b border-gray-100">
               <tr>
                 <th className="px-6 py-4 text-sm font-semibold text-gray-600">الموظف</th>
                 <th className="px-6 py-4 text-sm font-semibold text-gray-600">الدور</th>
@@ -201,7 +201,7 @@ export default function EmployeeManagement() {
 
             <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-2">
               <button className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50" onClick={() => setIsSidePanelOpen(false)}>إغلاق</button>
-              <button className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-sm">حفظ التغييرات</button>
+              <button className="px-4 py-2 text-white bg-gradient-to-br from-blue-600 to-indigo-800 rounded-lg hover:from-blue-700 hover:to-indigo-900 transition-all duration-300 shadow-md shadow-blue-900/30">حفظ التغييرات</button>
             </div>
           </div>
         </div>
@@ -211,15 +211,47 @@ export default function EmployeeManagement() {
 }
 
 // Sub-component: Stat Card
-function StatCard({ icon, title, value, bgColor }: { icon: React.ReactNode, title: string, value: string, bgColor: string }) {
+function StatCard({ icon, title, value, accent }: { icon: React.ReactNode, title: string, value: string, accent: 'blue' | 'emerald' | 'purple' | 'orange' }) {
+  const styles: Record<string, { card: string; iconBox: string; glow: string; blob: string; value: string }> = {
+    blue: {
+      card: 'from-blue-100 via-blue-50 to-indigo-100 border-blue-200/70',
+      iconBox: 'from-blue-700 to-indigo-950 shadow-blue-950/40',
+      glow: 'hover:shadow-blue-950/25',
+      blob: 'bg-blue-600/15 group-hover:bg-blue-600/25',
+      value: 'text-blue-950',
+    },
+    emerald: {
+      card: 'from-emerald-100 via-emerald-50 to-teal-100 border-emerald-200/70',
+      iconBox: 'from-emerald-700 to-teal-950 shadow-emerald-950/40',
+      glow: 'hover:shadow-emerald-950/25',
+      blob: 'bg-emerald-600/15 group-hover:bg-emerald-600/25',
+      value: 'text-emerald-950',
+    },
+    purple: {
+      card: 'from-purple-100 via-purple-50 to-fuchsia-100 border-purple-200/70',
+      iconBox: 'from-purple-700 to-fuchsia-950 shadow-purple-950/40',
+      glow: 'hover:shadow-purple-950/25',
+      blob: 'bg-purple-600/15 group-hover:bg-purple-600/25',
+      value: 'text-purple-950',
+    },
+    orange: {
+      card: 'from-orange-100 via-orange-50 to-amber-100 border-orange-200/70',
+      iconBox: 'from-orange-700 to-amber-950 shadow-orange-950/40',
+      glow: 'hover:shadow-orange-950/25',
+      blob: 'bg-orange-600/15 group-hover:bg-orange-600/25',
+      value: 'text-orange-950',
+    },
+  };
+  const s = styles[accent];
   return (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow-md transition-shadow">
-      <div className={`p-4 rounded-full ${bgColor}`}>
+    <div className={`group relative bg-gradient-to-br ${s.card} border rounded-2xl p-7 flex items-center gap-5 overflow-hidden shadow-sm hover:shadow-xl ${s.glow} transition-all duration-300 hover:-translate-y-2 cursor-default`}>
+      <div className={`absolute -left-8 -top-8 w-32 h-32 rounded-full blur-2xl transition-colors duration-300 ${s.blob}`}></div>
+      <div className={`relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${s.iconBox} text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}>
         {icon}
       </div>
-      <div>
-        <p className="text-sm text-gray-500 font-medium">{title}</p>
-        <h3 className="text-2xl font-bold text-gray-800 mt-1">{value}</h3>
+      <div className="relative z-10">
+        <p className="text-sm text-slate-500 font-bold">{title}</p>
+        <h3 className={`text-3xl font-black mt-1 ${s.value}`}>{value}</h3>
       </div>
     </div>
   );
