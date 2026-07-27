@@ -393,7 +393,7 @@ const StatCard = ({ title, value, icon, currency = '', theme }: any) => {
       }}
     >
       <div
-        className="w-6 h-6 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center mb-1.5 text-sm"
+        className="w-6 h-6 rounded-lg bg-white/15 border border-white/20 flex items-center justify-center mb-1.5 text-base"
         style={{
           transform: isHovered ? 'scale(1.1)' : 'scale(1)',
           transition: 'transform 0.3s ease',
@@ -402,8 +402,8 @@ const StatCard = ({ title, value, icon, currency = '', theme }: any) => {
         {icon}
       </div>
       <div>
-        <h3 className="text-[10px] font-bold mb-0.5 opacity-80">{title}</h3>
-        <p className="text-sm font-black leading-tight">{value} <span className="text-[9px] font-medium opacity-60">{currency}</span></p>
+        <h3 className="text-xs font-bold mb-0.5 opacity-80">{title}</h3>
+        <p className="text-base font-black leading-tight">{value} <span className="text-[11px] font-medium opacity-60">{currency}</span></p>
       </div>
     </div>
   );

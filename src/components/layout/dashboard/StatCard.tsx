@@ -162,8 +162,8 @@ export default function StatCard({ title, value, icon, variant }: StatCardProps)
       
       {/* القسم الأيمن للنصوص والأرقام الممررة ديناميكياً */}
       <div className="text-right space-y-2">
-        <p className="text-sm font-medium opacity-90">{title}</p>
-        <h3 className="text-2xl font-bold tracking-wide">{value}</h3>
+        <p className="text-base font-medium opacity-90">{title}</p>
+        <h3 className="text-[1.8rem] font-bold tracking-wide">{value}</h3>
       </div>
     </div>
   );
