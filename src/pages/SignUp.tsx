@@ -3,7 +3,9 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+// @ts-ignore
 import logoImage from '../assets/photo_2026-07-02_23-29-04.jpg';
+// import logoImage from '../assets/photo_2026-07-02_23-29-04.jpg';
 import { register as registerUser } from '../services/authService'; // تأكد من المسار حسب مجلداتك
 
 type Language = 'ar' | 'en';
@@ -233,7 +235,11 @@ const SignUp: React.FC = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
-
+const roleMap: Record<string, number> = {
+  admin: 1,
+  cashier: 2,
+  warehouse: 3,
+};
  const onSubmit = async (data: SignUpFormData) => {
     try {
       // 1. تجهيز البيانات لتطابق الـ DTO في الباك إند تماماً
@@ -243,7 +249,7 @@ const SignUp: React.FC = () => {
         password: data.password,
         email: data.email,
         storeName: data.shopName, // تحويل shopName إلى storeName كما يطلبه الباك إند
-        roleId: 1 // إعطائه القيمة 1 تلقائياً ليتوافق مع الـ Foreign Key
+        roleId: roleMap[data.role] // تحويل الدور المختار (admin/cashier/warehouse) إلى رقمه الصحيح
       };
 
       // 2. إرسال الطلب إلى الباك إند

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+// @ts-ignore
 import logoImage from '../assets/photo_2026-07-02_23-29-04.jpg';
 import { login } from '../services/authService';
 
@@ -151,16 +152,23 @@ const Login: React.FC = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
+const roleRoutes: Record<string, string> = {
+  Admin: '/dashboard',
+  Cashier: '/cashier',
+  Warehouse: '/warehouse',
+};
+
 const onSubmit = async (data: LoginFormData) => {
     try {
       // استدعاء دالة تسجيل الدخول التي أنشأناها في الخدمة
-      await login(data.username, data.password);
+      const response = await login(data.username, data.password);
 
       toast.success(t.successMsg);
-      
-      // تم التعديل هنا: التوجيه إلى صفحة الملف الشخصي بدلاً من الرئيسية
-  navigate('/dashboard');
-      
+
+      // التوجيه حسب دور المستخدم الراجع من السيرفر
+      const userRole = response?.user?.role;
+      const targetPath = roleRoutes[userRole] || '/dashboard';
+      navigate(targetPath);
     } catch (error: any) {
       // عرض رسالة الخطأ التي تأتي من الباك إند إن وجدت
       const errorMessage = error.response?.data?.message || t.genericError;
