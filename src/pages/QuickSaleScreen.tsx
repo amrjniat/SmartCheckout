@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type MouseEvent } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import PoswaveLogo from '../components/layout/PoswaveLogo';
-
+import { getProducts } from '../services/productService';
+import axiosInstance from '../services/axiosInstance';
 interface Category {
   id: string;
   ar: string;
@@ -72,12 +73,6 @@ const INITIAL_PRODUCTS: Product[] = [
   { id: 'p15', ar: 'كيك محلى', en: 'Sweet Cake', price: 15000, stock: 8, categoryId: 'bakery', icon: '🍰', isNew: true, barcode: '50003', code: 'BK-03' },
 ];
 
-const CUSTOMERS: Customer[] = [
-  { id: 'c1', name: 'أحمد محمد', phone: '0999999999', balance: 50000, invoiceCount: 27, discountEligible: true },
-  { id: 'c2', name: 'سارة خالد', phone: '0988888888', balance: 0, invoiceCount: 4, discountEligible: false },
-  { id: 'c3', name: 'يوسف علي', phone: '0977777777', balance: 120000, invoiceCount: 52, discountEligible: true },
-];
-
 const TAX_RATE = 0.05;
 
 const T = {
@@ -118,6 +113,7 @@ const T = {
     langBtn: 'English',
     close: 'إغلاق',
     saleSuccess: 'تمت عملية البيع بنجاح',
+       saleFailed: 'فشلت عملية البيع، حاول مجدداً',
     qtyExceeds: 'الكمية المطلوبة أكبر من المتوفر',
     itemAdded: 'تمت إضافة المنتج',
     itemUnavailable: 'المنتج غير متوفر',
@@ -167,6 +163,7 @@ const T = {
     langBtn: 'العربية',
     close: 'Close',
     saleSuccess: 'Sale completed successfully',
+      saleFailed: 'Sale failed, please try again',
     qtyExceeds: 'Requested quantity exceeds stock',
     itemAdded: 'Item added',
     itemUnavailable: 'Item unavailable',
@@ -214,12 +211,65 @@ export default function QuickSaleScreen() {
   const [payMethod, setPayMethod] = useState<PaymentMethod | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [pulseId, setPulseId] = useState<string | null>(null);
-
+  const [customerQuery, setCustomerQuery] = useState('');
+  const [customerResults, setCustomerResults] = useState<Customer[]>([]);
+  const [isSearchingCustomers, setIsSearchingCustomers] = useState(false);
+const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' });
+const [isAddingCustomer, setIsAddingCustomer] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const toastIdRef = useRef(0);
   const notifiedEligibility = useRef<Set<string>>(new Set());
 
   /* initial skeleton load */
+
+  /* ---------------------- Fetch Products from Backend ---------------------- */
+/* ---------------------- Fetch & Map Products ---------------------- */
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchProducts = async () => {
+      try {
+        const data = await getProducts();
+        
+        if (isMounted && data && data.length > 0) {
+          console.log("بيانات المنتجات المستلمة:", data);
+
+          // تحويل البيانات بناءً على الهيكلية الحقيقية للباك إند
+          const mappedProducts: Product[] = data.map((item: any) => {
+            // حساب إجمالي المخزون من مصفوفة productWarehouses
+            const totalStock = item.productWarehouses && Array.isArray(item.productWarehouses)
+              ? item.productWarehouses.reduce((sum: number, w: any) => sum + (w.quantity || 0), 0)
+              : 0;
+
+            return {
+              id: item.id?.toString() || Math.random().toString(),
+              ar: item.productName || 'منتج بدون اسم',
+              en: item.productName || 'Product',
+              price: item.price || item.unitPrice || item.sellingPrice || item.purchasePrice || 0,
+              stock: totalStock,
+              categoryId: item.categoryId ? item.categoryId.toString() : 'all',
+              icon: '📦', // أيقونة افتراضية
+              barcode: item.barcode || '',
+              code: item.productCode || ''
+            };
+          });
+
+          // تحديث القائمة بالمنتجات الحقيقية
+          setProductList(mappedProducts);
+        }
+      } catch (error) {
+        console.error("حدث خطأ أثناء جلب المنتجات:", error);
+      }
+    };
+
+    fetchProducts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+ 
   useEffect(() => {
     const id = setTimeout(() => setIsLoading(false), 650);
     return () => clearTimeout(id);
@@ -358,11 +408,47 @@ export default function QuickSaleScreen() {
     newSale();
   }, [cart, newSale, pushToast, t]);
 
-  const completeSale = useCallback(() => {
-    if (cart.length === 0 || !payMethod) return;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+// قيم ثابتة مؤقتة — المشروع لسا بمرحلة فرع/مستودع واحد (مبدأ YAGNI)
+const BRANCH_ID = 3;
+const WAREHOUSE_ID = 1;
+
+const completeSale = useCallback(async () => {
+  if (cart.length === 0 || !payMethod) return;
+
+  if (!customer) {
+    pushToast('error', t.selectCustomer);
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    const payload = {
+      customerId: Number(customer.id),
+      branchId: BRANCH_ID,
+      warehouseId: WAREHOUSE_ID,
+      discountAmount: discount > 0 ? discount : undefined,
+      items: cart.map((item) => ({
+        productId: Number(item.id),
+        quantity: item.qty,
+        unitPrice: item.price,
+      })),
+    };
+
+    await axiosInstance.post('/invoices', payload);
+
     pushToast('success', t.saleSuccess);
     newSale();
-  }, [cart, payMethod, newSale, pushToast, t]);
+  } catch (error: any) {
+    const serverMessage = error.response?.data?.message;
+    pushToast('error', serverMessage || t.saleFailed);
+    console.error('فشل إتمام عملية البيع:', error);
+  } finally {
+    setIsSubmitting(false);
+  }
+}, [cart, payMethod, customer, discount, newSale, pushToast, t]);
 
   const selectCustomer = useCallback(
     (c: Customer) => {
@@ -376,6 +462,74 @@ export default function QuickSaleScreen() {
     [pushToast, t]
   );
 
+  const handleAddCustomer = async () => {
+  if (!newCustomer.name.trim()) return;
+
+  setIsAddingCustomer(true);
+  try {
+    const response = await axiosInstance.post('/customers', {
+      customerName: newCustomer.name.trim(),
+      phone: newCustomer.phone.trim() || undefined,
+    });
+
+    const created = response.data;
+    const mapped: Customer = {
+      id: created.id?.toString() ?? created.Id?.toString(),
+      name: created.customerName ?? created.CustomerName,
+      phone: created.phone ?? created.Phone ?? '',
+      balance: created.currentBalance ?? created.CurrentBalance ?? 0,
+      invoiceCount: 0,
+      discountEligible: false,
+    };
+
+    setCustomer(mapped);
+    setShowAddCustomerModal(false);
+    setShowCustomerPicker(false);
+    setNewCustomer({ name: '', phone: '' });
+    pushToast('success', isRtl ? 'تمت إضافة العميل واختياره' : 'Customer added and selected');
+  } catch (error: any) {
+    const serverMessage = error.response?.data?.message;
+    pushToast('error', serverMessage || (isRtl ? 'فشل إضافة العميل' : 'Failed to add customer'));
+    console.error('فشل إنشاء عميل جديد:', error);
+  } finally {
+    setIsAddingCustomer(false);
+  }
+};
+useEffect(() => {
+  if (!showCustomerPicker) return;
+
+  if (!customerQuery.trim() || customerQuery.trim().length < 2) {
+    setCustomerResults([]);
+    return;
+  }
+
+  setIsSearchingCustomers(true);
+  const timeoutId = setTimeout(async () => {
+    try {
+      const response = await axiosInstance.get('/customers/search', {
+        params: { query: customerQuery.trim(), take: 10 },
+      });
+
+      const mapped: Customer[] = response.data.map((c: any) => ({
+        id: c.id.toString(),
+        name: c.customerName,
+        phone: c.phone || c.mobile || '',
+        balance: c.currentBalance || 0,
+        invoiceCount: 0,
+        discountEligible: false,
+      }));
+
+      setCustomerResults(mapped);
+    } catch (error) {
+      console.error('فشل البحث عن العملاء:', error);
+      setCustomerResults([]);
+    } finally {
+      setIsSearchingCustomers(false);
+    }
+  }, 400);
+
+  return () => clearTimeout(timeoutId);
+}, [customerQuery, showCustomerPicker]);
   /* ---------------------- Keyboard shortcuts ---------------------- */
 
   useEffect(() => {
@@ -734,12 +888,12 @@ export default function QuickSaleScreen() {
               ))}
             </div>
 
-            <button
+          <button
               onClick={completeSale}
-              disabled={cart.length === 0 || !payMethod}
+              disabled={cart.length === 0 || !payMethod || isSubmitting}
               className="card-lift w-full mt-2 py-2.5 rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white text-sm font-bold disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-indigo-600/25"
             >
-              {t.completeSale} · {formatMoney(total)}
+              {isSubmitting ? '...' : `${t.completeSale} · ${formatMoney(total)}`}
             </button>
           </div>
         </aside>
@@ -749,11 +903,11 @@ export default function QuickSaleScreen() {
       <div className="flex-shrink-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 px-3 py-2 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
         <QuickAction icon="🛒" label={t.newSale} onClick={newSale} />
         <QuickAction icon="➕" label={t.addProduct} onClick={() => setShowAddProductModal(true)} />
-        <QuickAction icon="👤" label={t.addCustomer} onClick={() => setShowCustomerPicker(true)} />
+       <QuickAction icon="👤" label={t.addCustomer} onClick={() => setShowAddCustomerModal(true)} />
         <QuickAction icon="🧾" label={t.holdInvoice} onClick={holdInvoice} disabled={cart.length === 0} />
         <QuickAction icon="🖨️" label={t.print} onClick={() => pushToast('info', t.print)} />
         <QuickAction icon="↩️" label={t.refund} onClick={() => pushToast('info', t.refund)} />
-        <QuickAction icon="💳" label={t.pay} onClick={completeSale} disabled={cart.length === 0 || !payMethod} highlight />
+       <QuickAction icon="💳" label={t.pay} onClick={completeSale} disabled={cart.length === 0 || !payMethod || isSubmitting} highlight />
       </div>
 
       {/* Add Product Modal */}
@@ -826,8 +980,37 @@ export default function QuickSaleScreen() {
             >
               {t.noCustomer}
             </button>
+            <button
+              onClick={() => {
+                setShowCustomerPicker(false);
+                setShowAddCustomerModal(true);
+              }}
+              className="w-full text-center px-3 py-1.5 mb-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 rounded-lg"
+            >
+              + {isRtl ? 'إضافة عميل جديد' : 'Add New Customer'}
+            </button>
+            <input
+              type="text"
+              value={customerQuery}
+              onChange={(e) => setCustomerQuery(e.target.value)}
+              placeholder={t.searchPlaceholder}
+              autoFocus
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+
             <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
-              {CUSTOMERS.map((c) => (
+              {isSearchingCustomers && (
+                <div className="text-center text-xs text-slate-400 py-3">...</div>
+              )}
+
+              {!isSearchingCustomers && customerQuery.trim().length >= 2 && customerResults.length === 0 && (
+                <div className="text-center text-xs text-slate-400 py-3">
+                  {isRtl ? 'لا يوجد نتائج' : 'No results'}
+                </div>
+              )}
+     
+
+              {customerResults.map((c) => (
                 <button
                   key={c.id}
                   onClick={() => selectCustomer(c)}
@@ -840,6 +1023,58 @@ export default function QuickSaleScreen() {
                   <div className="text-[10px] text-slate-400 mt-0.5">📞 {c.phone} · {t.balance} {formatMoney(c.balance)}</div>
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Customer Modal */}
+      {showAddCustomerModal && (
+        <div className="fixed inset-0 z-40 bg-black/30 flex items-center justify-center p-4" onClick={() => setShowAddCustomerModal(false)}>
+          <div
+            className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="font-bold text-sm text-slate-700 mb-4">{t.addCustomer}</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  {isRtl ? 'اسم العميل' : 'Customer Name'}
+                </label>
+                <input
+                  type="text"
+                  value={newCustomer.name}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">
+                  {isRtl ? 'رقم الهاتف (اختياري)' : 'Phone (optional)'}
+                </label>
+                <input
+                  type="text"
+                  value={newCustomer.phone}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={handleAddCustomer}
+                disabled={!newCustomer.name.trim() || isAddingCustomer}
+                className="card-lift-sm flex-1 bg-gradient-to-br from-indigo-600 to-blue-600 text-white py-2 rounded-lg text-sm font-bold shadow-sm shadow-indigo-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {isAddingCustomer ? '...' : t.save}
+              </button>
+              <button
+                onClick={() => setShowAddCustomerModal(false)}
+                className="card-lift-sm flex-1 bg-slate-100 text-slate-600 py-2 rounded-lg text-sm font-bold hover:bg-slate-200"
+              >
+                {t.cancel}
+              </button>
             </div>
           </div>
         </div>

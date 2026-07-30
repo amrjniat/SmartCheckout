@@ -212,7 +212,7 @@ export default function Header({
 
           {/* Navigation */}
           {menuItems.length > 0 && (
-            <div className="hidden lg:flex items-center gap-1 flex-1 max-w-[65%] relative px-6">
+            <div className="flex items-center gap-1 flex-1 min-w-0 max-w-full md:max-w-[65%] relative px-2 sm:px-6">
               <button
                 onClick={() => handleScrollClick('prev')}
                 className="scroll-btn p-1 rounded-full bg-white/5 text-white focus:outline-none"

@@ -1,10 +1,23 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-
+import axiosInstance from '../services/axiosInstance';
 type LayoutContext = { isRtl: boolean; setIsRtl: (value: boolean) => void };
 
 type TimeFilter = 'day' | 'week' | 'month';
-
+interface DashboardData {
+  sales: number;
+  invoices: number;
+  profit: number;
+  lowStock: number;
+  topProducts: { nameKey: string; salesCount: string; percentage: number }[];
+  transactions: {
+    id: string;
+    clientKey: string;
+    time: string;
+    total: string;
+    status: string;
+  }[];
+}
 // بيانات الترجمة
 const translations = {
   ar: {
@@ -73,62 +86,14 @@ const translations = {
   }
 };
 
-const dayData = {
-  sales: '2,500,000',
-  invoices: '145',
-  profit: '850,000',
-  lowStock: '12',
-  topProducts: [
-    { nameKey: 'productOil', salesCount: '412 قطعة', percentage: 85 },
-    { nameKey: 'productSugar', salesCount: '350 قطعة', percentage: 70 }
-  ],
-  transactions: [
-    { id: '#INV-08-42', clientKey: 'clientCash', time: '12:40 م', total: '150,000', status: 'paid' },
-    { id: '#INV-08-41', clientKey: 'clientCompany', time: '11:15 ص', total: '1,200,000', status: 'pending' },
-    { id: '#INV-08-40', clientKey: 'clientAhmed', time: '10:30 ص', total: '85,000', status: 'paid' }
-  ]
+// تحويل قيمة الفلتر من الفرونت لما يتوقعه الباك اند
+const mapPeriodToBackend = (filter: TimeFilter): string => {
+  return filter === 'day' ? 'today' : filter;
 };
-
-const weekData = {
-  sales: '17,400,000',
-  invoices: '980',
-  profit: '5,800,000',
-  lowStock: '15',
-  topProducts: [
-    { nameKey: 'productOil', salesCount: '2,840 قطعة', percentage: 90 },
-    { nameKey: 'productSugar', salesCount: '2,100 قطعة', percentage: 75 }
-  ],
-  transactions: [
-    { id: '#INV-08-35', clientKey: 'clientCompany', time: 'أمس', total: '3,100,000', status: 'paid' },
-    { id: '#INV-08-34', clientKey: 'clientCash', time: 'أول أمس', total: '450,000', status: 'paid' }
-  ]
-};
-
-const monthData = {
-  sales: '72,150,000',
-  invoices: '4,120',
-  profit: '24,300,000',
-  lowStock: '8',
-  topProducts: [
-    { nameKey: 'productOil', salesCount: '11,500 قطعة', percentage: 95 },
-    { nameKey: 'productSugar', salesCount: '9,400 قطعة', percentage: 80 }
-  ],
-  transactions: [
-    { id: '#INV-07-90', clientKey: 'clientInstitution', time: '12 يونيو', total: '8,500,000', status: 'pending' },
-    { id: '#INV-07-89', clientKey: 'clientAhmed', time: '10 يونيو', total: '120,000', status: 'paid' }
-  ]
-};
-
 const filterTextData: Record<TimeFilter, string> = {
   day: 'filterTextDay',
   week: 'filterTextWeek',
   month: 'filterTextMonth'
-};
-
-const dashboardMockData: Record<TimeFilter, typeof dayData> = {
-  day: dayData,
-  week: weekData,
-  month: monthData
 };
 
 // ✅ مكون البطاقة بعد إعادة الهيكلة الجذرية الشاملة
@@ -178,19 +143,17 @@ const HoverCard = ({ children, className = '', accentColor = 'blue' }: HoverCard
 // ✅ مكون صف المنتج - تم تعديل الـ Hover لمنع تعارض المصفوفات (نقطة 12)
 const ProductRow = ({
   product,
-  index,
-  getTranslatedValue
+  index
 }: {
   product: { nameKey: string; salesCount: string; percentage: number };
   index: number;
-  getTranslatedValue: (key: string) => string;
 }) => (
   <div className="space-y-3 p-2 rounded-xl transition-colors duration-200 hover:bg-slate-50/80">
     <div className="flex justify-between items-center text-sm">
       <span className="text-slate-400 text-xs">{product.salesCount}</span>
       <span className="font-semibold text-slate-800">
-        {getTranslatedValue(product.nameKey)}
-      </span>
+  {product.nameKey}
+</span>
     </div>
     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
       <div
@@ -230,7 +193,67 @@ export default function Dashboard() {
   const { isRtl } = useOutletContext<LayoutContext>();
 
   const t = translations[isRtl ? 'ar' : 'en'];
-  const currentData = dashboardMockData[activeFilter];
+const [currentData, setCurrentData] = useState<DashboardData>({
+  sales: 0,
+  invoices: 0,
+  profit: 0,
+  lowStock: 0,
+  topProducts: [],
+  transactions: []
+});
+const [isLoading, setIsLoading] = useState(true);
+const [error, setError] = useState<string | null>(null);
+useEffect(() => {
+  const fetchDashboardData = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const backendPeriod = mapPeriodToBackend(activeFilter);
+
+      const [salesRes, profitRes, inventoryRes, topProductsRes] = await Promise.all([
+        axiosInstance.get(`/reports/sales?period=${backendPeriod}`),
+        axiosInstance.get(`/reports/profit?period=${backendPeriod}`),
+        axiosInstance.get(`/reports/inventory`),
+        axiosInstance.get(`/reports/top-products?period=${backendPeriod}&top=5`)
+      ]);
+
+ const latestTransactions = [...salesRes.data.data]
+  .sort((a: any, b: any) => new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime())
+  .slice(0, 5)
+  .map((inv: any) => ({
+    id: inv.invoiceNumber,
+    clientKey: inv.customerName,
+    time: new Date(inv.invoiceDate).toLocaleTimeString(isRtl ? 'ar' : 'en', { hour: '2-digit', minute: '2-digit' }),
+    total: Number(inv.totalAmount).toLocaleString(),
+    status: inv.status === 'مدفوعة' ? 'paid' : 'pending'
+  }));
+
+const topProducts = topProductsRes.data.products.map((p: any) => ({
+  nameKey: p.productName,
+  salesCount: `${p.totalQuantity} ${isRtl ? 'قطعة' : 'pcs'}`,
+  percentage: p.percentage
+}));
+
+setCurrentData({
+  sales: salesRes.data.totalSales,
+  invoices: salesRes.data.totalInvoices,
+  profit: profitRes.data.netProfit,
+  lowStock: inventoryRes.data.lowStockCount,
+  topProducts,
+  transactions: latestTransactions
+});
+
+    } catch (err: any) {
+      console.error('Dashboard fetch error:', err);
+      setError('فشل تحميل بيانات لوحة التحكم');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  fetchDashboardData();
+}, [activeFilter]);
 
   const getTranslatedValue = (key: string): string => {
     const translationsAr = translations.ar as Record<string, string>;
@@ -447,7 +470,7 @@ export default function Dashboard() {
                   {currentData.transactions.map((tx, index) => (
                     <tr key={`${tx.id}-${index}`} className="hover:bg-slate-50 transition-all duration-200">
                       <td className="px-3 sm:px-4 py-4 font-semibold text-blue-600">{tx.id}</td>
-                      <td className="px-3 sm:px-4 py-4 text-slate-700">{getTranslatedValue(tx.clientKey)}</td>
+                    <td className="px-3 sm:px-4 py-4 text-slate-700">{tx.clientKey}</td>
                       <td className="px-3 sm:px-4 py-4 text-slate-500">{tx.time}</td>
                       <td className="px-3 sm:px-4 py-4 font-bold text-slate-900">{tx.total} {t.currency}</td>
                       <td className="px-3 sm:px-4 py-4 text-center">
@@ -466,7 +489,7 @@ export default function Dashboard() {
             <h2 className="text-lg font-bold text-slate-900 mb-6">{t.topProductsTitle}</h2>
             <div className="space-y-6">
               {currentData.topProducts.map((product, index) => (
-                <ProductRow key={index} product={product} index={index} getTranslatedValue={getTranslatedValue} />
+                <ProductRow key={index} product={product} index={index} />
               ))}
             </div>
           </div>
@@ -475,11 +498,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
