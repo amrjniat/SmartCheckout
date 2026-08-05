@@ -1,8 +1,12 @@
+
+
 import { useState, useEffect, useMemo, useRef, useCallback, type MouseEvent } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import PoswaveLogo from '../components/layout/PoswaveLogo';
-import { getProducts } from '../services/productService';
+import { getProducts, deleteProduct } from '../services/productService';
 import axiosInstance from '../services/axiosInstance';
+import connection, { startSignalRConnection } from '../services/signalRService';
+
 interface Category {
   id: string;
   ar: string;
@@ -20,6 +24,7 @@ interface Product {
   stock: number;
   categoryId: string;
   icon: string;
+  image?: string;
   isNew?: boolean;
   barcode: string;
   code: string;
@@ -188,6 +193,30 @@ function formatMoney(n: number) {
   return n.toLocaleString('en-US');
 }
 
+const AVATAR_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444', '#84cc16'];
+
+function generateProductAvatar(name: string): string {
+  // اشتقاق رقم ثابت من اسم المنتج (hash بسيط) لضمان نفس اللون لنفس الاسم دائماً
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const color = AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+
+  // أول حرف أو حرفين من الاسم (يدعم العربي والإنجليزي)
+  const initials = name.trim().slice(0, 2);
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+      <rect width="120" height="120" rx="16" fill="${color}"/>
+      <text x="60" y="68" font-family="Arial, sans-serif" font-size="42" font-weight="bold"
+            fill="white" text-anchor="middle">${initials}</text>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 interface LayoutContext {
   isRtl: boolean;
   setIsRtl: (value: boolean) => void;
@@ -214,62 +243,73 @@ export default function QuickSaleScreen() {
   const [customerQuery, setCustomerQuery] = useState('');
   const [customerResults, setCustomerResults] = useState<Customer[]>([]);
   const [isSearchingCustomers, setIsSearchingCustomers] = useState(false);
-const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
-const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' });
-const [isAddingCustomer, setIsAddingCustomer] = useState(false);
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '' });
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const toastIdRef = useRef(0);
   const notifiedEligibility = useRef<Set<string>>(new Set());
 
-  /* initial skeleton load */
-
   /* ---------------------- Fetch Products from Backend ---------------------- */
-/* ---------------------- Fetch & Map Products ---------------------- */
-  useEffect(() => {
-    let isMounted = true;
+  /* ---------------------- Fetch & Map Products ---------------------- */
+  
+  const fetchProducts = useCallback(async () => {
+    try {
+      const data = await getProducts();
+      
+      if (data && data.length > 0) {
+        console.log("بيانات المنتجات المستلمة:", data);
 
-    const fetchProducts = async () => {
-      try {
-        const data = await getProducts();
-        
-        if (isMounted && data && data.length > 0) {
-          console.log("بيانات المنتجات المستلمة:", data);
+        // تحويل البيانات بناءً على الهيكلية الحقيقية للباك إند
+        const mappedProducts: Product[] = data.map((item: any) => {
+          // حساب إجمالي المخزون من مصفوفة productWarehouses
+          const totalStock = item.productWarehouses && Array.isArray(item.productWarehouses)
+            ? item.productWarehouses.reduce((sum: number, w: any) => sum + (w.quantity || 0), 0)
+            : 0;
 
-          // تحويل البيانات بناءً على الهيكلية الحقيقية للباك إند
-          const mappedProducts: Product[] = data.map((item: any) => {
-            // حساب إجمالي المخزون من مصفوفة productWarehouses
-            const totalStock = item.productWarehouses && Array.isArray(item.productWarehouses)
-              ? item.productWarehouses.reduce((sum: number, w: any) => sum + (w.quantity || 0), 0)
-              : 0;
+          return {
+            id: item.id?.toString() || Math.random().toString(),
+            ar: item.productName || 'منتج بدون اسم',
+            en: item.productName || 'Product',
+            price: item.price || item.unitPrice || item.sellingPrice || item.purchasePrice || 0,
+            stock: totalStock,
+            categoryId: item.categoryId ? item.categoryId.toString() : 'all',
+            icon: '📦', // أيقونة افتراضية
+            // إذا الباك اند بيرجع رابط صورة حقيقي مستقبلاً (imageUrl) نستخدمه، وإلا نولّد أفاتار محلي
+            image: item.imageUrl || generateProductAvatar(item.productName || 'منتج'),
+            barcode: item.barcode || '',
+            code: item.productCode || ''
+          };
+        });
 
-            return {
-              id: item.id?.toString() || Math.random().toString(),
-              ar: item.productName || 'منتج بدون اسم',
-              en: item.productName || 'Product',
-              price: item.price || item.unitPrice || item.sellingPrice || item.purchasePrice || 0,
-              stock: totalStock,
-              categoryId: item.categoryId ? item.categoryId.toString() : 'all',
-              icon: '📦', // أيقونة افتراضية
-              barcode: item.barcode || '',
-              code: item.productCode || ''
-            };
-          });
-
-          // تحديث القائمة بالمنتجات الحقيقية
-          setProductList(mappedProducts);
-        }
-      } catch (error) {
-        console.error("حدث خطأ أثناء جلب المنتجات:", error);
+        // تحديث القائمة بالمنتجات الحقيقية
+        setProductList(mappedProducts);
       }
-    };
-
-    fetchProducts();
-
-    return () => {
-      isMounted = false;
-    };
+    } catch (error) {
+      console.error("حدث خطأ أثناء جلب المنتجات:", error);
+    }
   }, []);
- 
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    // 1. التأكد من الاتصال
+    startSignalRConnection();
+
+    // 2. الاستماع لتحديثات المخزون القادمة من الباك إند
+    connection.on("InventoryUpdated", () => {
+        console.log("تم تعديل المخزون من قبل المستودع! جاري تحديث قائمة المنتجات للكاشير...");
+        fetchProducts(); 
+    });
+
+    // 3. تنظيف الاستماع عند إغلاق الشاشة
+    return () => {
+        connection.off("InventoryUpdated");
+    };
+  }, [fetchProducts]);
+
   useEffect(() => {
     const id = setTimeout(() => setIsLoading(false), 650);
     return () => clearTimeout(id);
@@ -322,6 +362,7 @@ const [isAddingCustomer, setIsAddingCustomer] = useState(false);
       stock: 100,
       categoryId: activeCategory === 'all' ? 'drinks' : activeCategory,
       icon: '📦',
+      image: generateProductAvatar(newProduct.name),
       barcode: Date.now().toString(),
       code: 'NEW-' + Date.now().toString().slice(-4),
       isNew: true
@@ -336,11 +377,33 @@ const [isAddingCustomer, setIsAddingCustomer] = useState(false);
   const handleDeleteProduct = useCallback(
     (id: string, e: React.MouseEvent) => {
       e.stopPropagation();
+
+      const confirmed = window.confirm(
+        isRtl
+          ? 'هل أنتم متأكدون من حذف هذا المنتج؟ سيختفي من كل الشاشات ولن يظهر في البحث بعد الآن.'
+          : 'Are you sure you want to delete this product? It will disappear from all screens.'
+      );
+      if (!confirmed) return;
+
+      // حذف تفاؤلي (Optimistic) من الواجهة فوراً لتجربة استخدام سلسة
+      const productBackup = productList.find((p) => p.id === id);
       setProductList((prev) => prev.filter((p) => p.id !== id));
       setCart((prev) => prev.filter((c) => c.id !== id));
-      pushToast('info', t.productDeleted);
+
+      deleteProduct(id)
+        .then(() => {
+          pushToast('info', t.productDeleted);
+        })
+        .catch((err) => {
+          // فشل الحذف في الباك إند: نُعيد المنتج للواجهة لأنه لم يُحذف فعلياً
+          console.error('فشل حذف المنتج من الباك إند:', err?.response?.data || err);
+          if (productBackup) {
+            setProductList((prev) => [...prev, productBackup]);
+          }
+          pushToast('error', isRtl ? 'تعذر حذف المنتج، حاولوا مرة أخرى.' : 'Failed to delete product.');
+        });
     },
-    [pushToast, t]
+    [pushToast, t, productList, isRtl]
   );
 
   const addToCart = useCallback(
@@ -734,8 +797,16 @@ useEffect(() => {
                         </span>
                       )}
 
-                      <div className="w-full h-16 rounded-xl bg-gradient-to-br from-slate-50 to-indigo-50/60 flex items-center justify-center text-3xl mb-2">
-                        {p.icon}
+                      <div className="w-full h-16 rounded-xl bg-gradient-to-br from-slate-50 to-indigo-50/60 flex items-center justify-center text-3xl mb-2 overflow-hidden">
+                        {p.image ? (
+                          <img
+                            src={p.image}
+                            alt={isRtl ? p.ar : p.en}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          p.icon
+                        )}
                       </div>
                       <div className="text-xs font-bold text-slate-700 truncate">{isRtl ? p.ar : p.en}</div>
                       <div className="flex items-center justify-between mt-1">
@@ -794,7 +865,17 @@ useEffect(() => {
               <div className="space-y-2">
                 {cart.map((item) => (
                   <div key={item.id} className="card-lift-sm flex items-center gap-2 rounded-xl border border-slate-100 bg-white p-2 hover:border-indigo-200">
-                    <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg flex-shrink-0">{item.icon}</div>
+                    <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center text-lg flex-shrink-0 overflow-hidden">
+                       {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={isRtl ? item.ar : item.en}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          item.icon
+                        )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-bold text-slate-700 truncate">{isRtl ? item.ar : item.en}</div>
                       <div className="text-[11px] text-indigo-600 font-semibold">{formatMoney(item.price * item.qty)}</div>
@@ -902,7 +983,6 @@ useEffect(() => {
       {/* Quick actions bar */}
       <div className="flex-shrink-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 px-3 py-2 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
         <QuickAction icon="🛒" label={t.newSale} onClick={newSale} />
-        <QuickAction icon="➕" label={t.addProduct} onClick={() => setShowAddProductModal(true)} />
        <QuickAction icon="👤" label={t.addCustomer} onClick={() => setShowAddCustomerModal(true)} />
         <QuickAction icon="🧾" label={t.holdInvoice} onClick={holdInvoice} disabled={cart.length === 0} />
         <QuickAction icon="🖨️" label={t.print} onClick={() => pushToast('info', t.print)} />
@@ -1046,12 +1126,11 @@ useEffect(() => {
                   value={newCustomer.name}
                   onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  autoFocus
                 />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">
-                  {isRtl ? 'رقم الهاتف (اختياري)' : 'Phone (optional)'}
+                  {isRtl ? 'رقم الهاتف (اختياري)' : 'Phone (Optional)'}
                 </label>
                 <input
                   type="text"
@@ -1064,8 +1143,8 @@ useEffect(() => {
             <div className="flex gap-2 mt-5">
               <button
                 onClick={handleAddCustomer}
-                disabled={!newCustomer.name.trim() || isAddingCustomer}
-                className="card-lift-sm flex-1 bg-gradient-to-br from-indigo-600 to-blue-600 text-white py-2 rounded-lg text-sm font-bold shadow-sm shadow-indigo-600/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={isAddingCustomer || !newCustomer.name.trim()}
+                className="card-lift-sm flex-1 bg-gradient-to-br from-indigo-600 to-blue-600 text-white py-2 rounded-lg text-sm font-bold shadow-sm shadow-indigo-600/20 disabled:opacity-50"
               >
                 {isAddingCustomer ? '...' : t.save}
               </button>
@@ -1081,24 +1160,21 @@ useEffect(() => {
       )}
 
       {/* Toasts */}
-      <div className="fixed top-4 inset-x-0 z-50 flex flex-col items-center gap-2 pointer-events-none px-4">
+      <div className="fixed bottom-4 end-4 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`toast-in pointer-events-auto max-w-xs w-full text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 ${
-              toast.type === 'success'
-                ? 'bg-emerald-600 text-white'
-                : toast.type === 'error'
-                ? 'bg-rose-600 text-white'
-                : toast.type === 'warning'
-                ? 'bg-amber-500 text-white'
-                : 'bg-slate-800 text-white'
+            className={`toast-in pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg border ${
+              toast.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800 shadow-emerald-500/10' :
+              toast.type === 'error' ? 'bg-rose-50 border-rose-100 text-rose-800 shadow-rose-500/10' :
+              toast.type === 'warning' ? 'bg-amber-50 border-amber-100 text-amber-800 shadow-amber-500/10' :
+              'bg-blue-50 border-blue-100 text-blue-800 shadow-blue-500/10'
             }`}
           >
-            <span>
-              {toast.type === 'success' ? '✔' : toast.type === 'error' ? '❌' : toast.type === 'warning' ? '⚠️' : 'ℹ️'}
+            <span className="text-lg">
+              {toast.type === 'success' ? '✅' : toast.type === 'error' ? '🚨' : toast.type === 'warning' ? '⚠️' : 'ℹ️'}
             </span>
-            <span>{toast.text}</span>
+            <span className="text-sm font-bold">{toast.text}</span>
           </div>
         ))}
       </div>
@@ -1106,30 +1182,18 @@ useEffect(() => {
   );
 }
 
-function QuickAction({
-  icon,
-  label,
-  onClick,
-  disabled,
-  highlight,
-}: {
-  icon: string;
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  highlight?: boolean;
-}) {
+function QuickAction({ icon, label, onClick, disabled, highlight }: { icon: string; label: string; onClick: () => void; disabled?: boolean; highlight?: boolean }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`card-lift-sm flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex-shrink-0 ${
-        highlight
-          ? 'bg-gradient-to-br from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-600/25'
-          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-      } disabled:opacity-40 disabled:cursor-not-allowed`}
+      className={`card-lift-sm flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
+        disabled ? 'opacity-40 cursor-not-allowed bg-slate-50 text-slate-400' :
+        highlight ? 'bg-gradient-to-br from-indigo-600 to-blue-600 text-white shadow-sm shadow-indigo-600/25' :
+        'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
+      }`}
     >
-      <span>{icon}</span>
+      <span className="text-sm">{icon}</span>
       {label}
     </button>
   );

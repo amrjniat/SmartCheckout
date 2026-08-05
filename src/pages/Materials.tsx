@@ -812,6 +812,9 @@
 
 
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import AddProductModal from '../components/AddProductModal'; // عدّلوا المسار حسب مكان الملف الفعلي عندكم
+import { deleteProduct } from '../services/productService'; // عدّلوا المسار حسب مكان الملف الفعلي عندكم
 import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 
 interface DashboardContext {
@@ -851,6 +854,11 @@ interface Toast {
   type: 'success' | 'info' | 'warning' | 'error';
 }
 
+interface UnitOption {
+  id: number;
+  unitName: string;
+}
+
 export default function ProductsManagementPage() {
   // ==========================================
   // 2. حالات الصفحة والمخازن الـ State
@@ -886,6 +894,8 @@ export default function ProductsManagementPage() {
   const [drawerProduct, setDrawerProduct] = useState<Product | null>(null);
   const [modalMode, setModalMode] = useState<'add' | 'edit' | null>(null);
   const [selectedProductForEdit, setSelectedProductForEdit] = useState<Product | null>(null);
+  const [units, setUnits] = useState<UnitOption[]>([]);
+  const [selectedUnitId, setSelectedUnitId] = useState('');
 
   // نظام التنبيهات
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -989,6 +999,16 @@ export default function ProductsManagementPage() {
     return () => clearTimeout(loaderTimeout);
   }, []);
 
+  useEffect(() => {
+    axios.get('http://localhost:5157/api/Units')
+      .then((response) => {
+        setUnits(response.data);
+      })
+      .catch((error) => {
+        console.error('حدث خطأ أثناء جلب الوحدات:', error);
+      });
+  }, []);
+
   const animateCounter = (target: number, setCounter: React.Dispatch<React.SetStateAction<number>>) => {
     let start = 0;
     const duration = 1000; 
@@ -1041,6 +1061,7 @@ export default function ProductsManagementPage() {
       category: 'مشروبات', purchasePrice: 0, sellingPrice: 0, quantity: 1, minLimit: 5,
       supplier: 'شركة المراعي الوطنية', unit: 'قطعة', description: '', image: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=150&auto=format&fit=crop&q=60'
     });
+    setSelectedUnitId('');
     setModalMode('add');
   };
 
@@ -1085,25 +1106,79 @@ export default function ProductsManagementPage() {
       return;
     }
 
+    const confirmed = window.confirm('هل أنتم متأكدون من حذف هذا المنتج؟ سيختفي من كل الشاشات (POS، المستودع، لوحة التحكم).');
+    if (!confirmed) return;
+
+    // حذف تفاؤلي (Optimistic) من الجدول المحلي فوراً
+    const productBackup = products.find((p) => p.id === id);
     setProducts(products.filter(p => p.id !== id));
-    showToast('🗑️ تم حذف المنتج بنجاح وإسقاطه من حركات المخازن.', 'warning');
     if (drawerProduct?.id === id) setDrawerProduct(null);
+
+    axios.delete(`http://localhost:5157/api/Products/${id}`)
+      .then(() => {
+        showToast('🗑️ تم حذف المنتج بنجاح وإسقاطه من حركات المخازن.', 'warning');
+      })
+      .catch((err) => {
+        // فشل الحذف في الباك إند: نُعيد المنتج للجدول لأنه لم يُحذف فعلياً من قاعدة البيانات
+        console.error('فشل حذف المنتج من الباك إند:', err?.response?.data || err);
+        if (productBackup) {
+          setProducts((prev) => [productBackup, ...prev]);
+        }
+        showToast('❌ تعذر حذف المنتج، حاولوا مرة أخرى.', 'error');
+      });
   };
 
   const handleSaveProduct = (e: React.FormEvent) => {
     e.preventDefault();
+    // ⚠️ ملاحظة: فرع 'add' هنا لم يعد يُستدعى فعلياً بعد اليوم، لأن الإضافة الآن
+    // تمر عبر مكوّن <AddProductModal /> ومنطقه الخاص. تُرك هنا مؤقتاً وسيُحذف
+    // في خطوة تنظيف لاحقة بعد تحديث نموذج التعديل أيضاً.
     if (modalMode === 'add') {
       const statusValue = formData.quantity === 0 ? 'out' : formData.quantity <= formData.minLimit ? 'low' : 'available';
-      const newProduct: Product = {
-        id: String(products.length + 1),
+      const newProductPayload = {
         ...formData,
-        status: statusValue,
-        lastMovement: 'إنشاء مادة جديدة - الآن',
-        turnoverRate: 'medium',
-        isNew: true
+        unitId: Number(selectedUnitId)
       };
-      setProducts([newProduct, ...products]);
-      showToast('✅ تمت إضافة المنتج ونشره على السحابة بنجاح.');
+
+      axios.post('http://localhost:5157/api/Products', newProductPayload)
+        .then((response) => {
+          const createdProduct = response.data ?? {
+            id: String(products.length + 1),
+            ...formData,
+            status: statusValue,
+            lastMovement: 'إنشاء مادة جديدة - الآن',
+            turnoverRate: 'medium',
+            isNew: true
+          };
+
+          const newProduct: Product = {
+            id: String(createdProduct.id ?? products.length + 1),
+            name: createdProduct.name ?? formData.name,
+            sku: createdProduct.sku ?? formData.sku,
+            barcode: createdProduct.barcode ?? formData.barcode,
+            category: createdProduct.category ?? formData.category,
+            purchasePrice: createdProduct.purchasePrice ?? formData.purchasePrice,
+            sellingPrice: createdProduct.sellingPrice ?? formData.sellingPrice,
+            quantity: createdProduct.quantity ?? formData.quantity,
+            minLimit: createdProduct.minLimit ?? formData.minLimit,
+            status: createdProduct.status ?? statusValue,
+            supplier: createdProduct.supplier ?? formData.supplier,
+            unit: createdProduct.unit ?? formData.unit,
+            description: createdProduct.description ?? formData.description,
+            image: createdProduct.image ?? formData.image,
+            lastMovement: createdProduct.lastMovement ?? 'إنشاء مادة جديدة - الآن',
+            turnoverRate: createdProduct.turnoverRate ?? 'medium',
+            isNew: true
+          };
+
+          setProducts([newProduct, ...products]);
+          showToast('✅ تمت إضافة المنتج ونشره على السحابة بنجاح.');
+          setModalMode(null);
+        })
+        .catch((error) => {
+          console.error('حدث خطأ أثناء حفظ المنتج:', error);
+          showToast('حدث خطأ أثناء حفظ المنتج', 'error');
+        });
     } else if (modalMode === 'edit' && selectedProductForEdit) {
       const statusValue = formData.quantity === 0 ? 'out' : formData.quantity <= formData.minLimit ? 'low' : 'available';
       
@@ -1499,12 +1574,48 @@ export default function ProductsManagementPage() {
       {/* ==========================================
           القسم التاسع: نافذة (Modal) إضافة وتعديل المنتجات والمواد
           ========================================== */}
-      {modalMode !== null && (
+      {/* ==========================================
+          نافذة إضافة منتج جديد - المكوّن الموحّد الصحيح
+          يطابق حقول ProductDto حرفياً ويمنع تكرار خطأ FK
+          ========================================== */}
+      <AddProductModal
+        isOpen={modalMode === 'add'}
+        mode="add"
+        onClose={() => setModalMode(null)}
+        onSuccess={(saved) => {
+          const newProduct: Product = {
+            id: String(saved.id ?? products.length + 1),
+            name: saved.productName ?? '',
+            sku: saved.productCode ?? '',
+            barcode: saved.barcode ?? '',
+            category: saved.categoryName ?? 'غير محدد',
+            purchasePrice: saved.purchasePrice ?? 0,
+            sellingPrice: saved.sellingPrice ?? 0,
+            quantity: saved.initialQuantity ?? 0,
+            minLimit: saved.minStock ?? 0,
+            status: 'available',
+            supplier: saved.supplierName ?? 'غير محدد',
+            unit: saved.unitName ?? '',
+            description: saved.description ?? '',
+            image: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=150&auto=format&fit=crop&q=60',
+            lastMovement: 'إنشاء مادة جديدة - الآن',
+            turnoverRate: 'medium',
+            isNew: true,
+          };
+          setProducts((prev) => [newProduct, ...prev]);
+          showToast('✅ تم إضافة المنتج بنجاح!');
+        }}
+      />
+
+      {/* ==========================================
+          نافذة تعديل منتج قائم - لم تُعدَّل بعد (خطوة قادمة منفصلة)
+          ========================================== */}
+      {modalMode === 'edit' && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-base font-black text-slate-800">
-                {modalMode === 'add' ? '➕ إنشاء وإدراج بطاقة منتج سحابي' : '✏️ تعديل صنف مخزني قائم'}
+                ✏️ تعديل صنف مخزني قائم
               </h2>
               <button onClick={() => setModalMode(null)} className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 text-xs font-bold">✕</button>
             </div>
@@ -1528,6 +1639,23 @@ export default function ProductsManagementPage() {
                     <option value="مشروبات">مشروبات</option>
                     <option value="منظفات">منظفات</option>
                     <option value="ألبان">ألبان</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-slate-600">وحدة القياس</label>
+                  <select
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 bg-white focus:outline-none"
+                    value={selectedUnitId}
+                    onChange={(e) => setSelectedUnitId(e.target.value)}
+                    required
+                  >
+                    <option value="" disabled>اختر الوحدة...</option>
+                    {units.map((unit) => (
+                      <option key={unit.id} value={unit.id}>
+                        {unit.unitName}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
