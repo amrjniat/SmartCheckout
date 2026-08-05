@@ -1,7 +1,6 @@
 import axiosInstance from './axiosInstance';
+import { startSignalRConnection } from './signalRService';
 
-
-// لاحظ كلمة "export" في البداية
 export const login = async (username: string, password: string) => {
   const response = await axiosInstance.post('/Auth/login', {
         username,
@@ -10,10 +9,12 @@ export const login = async (username: string, password: string) => {
     
     if (response.data.token) {
         localStorage.setItem('token', response.data.token);
+        startSignalRConnection();
     }
     
     return response.data;
 };
+
 export const register = async (registerData: any) => {
     try {
         // تأكد من أن مسار الـ API يطابق المسار لديك في الـ Backend (غالباً api/Auth/register)
