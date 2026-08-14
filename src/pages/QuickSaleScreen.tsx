@@ -1,8 +1,6 @@
 
-
-import { useState, useEffect, useMemo, useRef, useCallback, type MouseEvent } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import PoswaveLogo from '../components/layout/PoswaveLogo';
 import { getProducts, deleteProduct } from '../services/productService';
 import axiosInstance from '../services/axiosInstance';
 import connection, { startSignalRConnection } from '../services/signalRService';
@@ -118,7 +116,7 @@ const T = {
     langBtn: 'English',
     close: 'إغلاق',
     saleSuccess: 'تمت عملية البيع بنجاح',
-       saleFailed: 'فشلت عملية البيع، حاول مجدداً',
+    saleFailed: 'فشلت عملية البيع، حاول مجدداً',
     qtyExceeds: 'الكمية المطلوبة أكبر من المتوفر',
     itemAdded: 'تمت إضافة المنتج',
     itemUnavailable: 'المنتج غير متوفر',
@@ -168,7 +166,7 @@ const T = {
     langBtn: 'العربية',
     close: 'Close',
     saleSuccess: 'Sale completed successfully',
-      saleFailed: 'Sale failed, please try again',
+    saleFailed: 'Sale failed, please try again',
     qtyExceeds: 'Requested quantity exceeds stock',
     itemAdded: 'Item added',
     itemUnavailable: 'Item unavailable',
@@ -196,14 +194,11 @@ function formatMoney(n: number) {
 const AVATAR_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444', '#84cc16'];
 
 function generateProductAvatar(name: string): string {
-  // اشتقاق رقم ثابت من اسم المنتج (hash بسيط) لضمان نفس اللون لنفس الاسم دائماً
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
   const color = AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-
-  // أول حرف أو حرفين من الاسم (يدعم العربي والإنجليزي)
   const initials = name.trim().slice(0, 2);
 
   const svg = `
@@ -217,6 +212,46 @@ function generateProductAvatar(name: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+function firstNonEmptyString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === 'string') {
+      const normalized = value.trim();
+      if (normalized) return normalized;
+    }
+  }
+  return undefined;
+}
+
+function resolveProductNames(item: any): { ar: string; en: string } {
+  const baseName = firstNonEmptyString(item?.productName, item?.name, item?.title);
+
+  const arName = firstNonEmptyString(
+    item?.productNameAr,
+    item?.productNameAR,
+    item?.nameAr,
+    item?.arabicName,
+    item?.name?.ar,
+    item?.productName?.ar,
+    baseName
+  );
+
+  const enName = firstNonEmptyString(
+    item?.productNameEn,
+    item?.productNameEN,
+    item?.nameEn,
+    item?.englishName,
+    item?.productEnglishName,
+    item?.name?.en,
+    item?.productName?.en,
+    baseName
+  );
+
+  return {
+    ar: arName || 'منتج بدون اسم',
+    en: enName || arName || 'Product'
+  };
+}
+
 interface LayoutContext {
   isRtl: boolean;
   setIsRtl: (value: boolean) => void;
@@ -224,13 +259,13 @@ interface LayoutContext {
 }
 
 export default function QuickSaleScreen() {
-  const { isRtl, setPageData } = useOutletContext<LayoutContext>();
+  const { isRtl } = useOutletContext<LayoutContext>();
   const t = isRtl ? T.ar : T.en;
 
   const [isLoading, setIsLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
-  const [productList, setProductList] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [productList, setProductList] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [showCustomerPicker, setShowCustomerPicker] = useState(false);
@@ -250,43 +285,44 @@ export default function QuickSaleScreen() {
   const toastIdRef = useRef(0);
   const notifiedEligibility = useRef<Set<string>>(new Set());
 
-  /* ---------------------- Fetch Products from Backend ---------------------- */
-  /* ---------------------- Fetch & Map Products ---------------------- */
-  
   const fetchProducts = useCallback(async () => {
     try {
       const data = await getProducts();
-      
+
       if (data && data.length > 0) {
         console.log("بيانات المنتجات المستلمة:", data);
 
-        // تحويل البيانات بناءً على الهيكلية الحقيقية للباك إند
         const mappedProducts: Product[] = data.map((item: any) => {
-          // حساب إجمالي المخزون من مصفوفة productWarehouses
+          const names = resolveProductNames(item);
+
           const totalStock = item.productWarehouses && Array.isArray(item.productWarehouses)
             ? item.productWarehouses.reduce((sum: number, w: any) => sum + (w.quantity || 0), 0)
             : 0;
 
           return {
             id: item.id?.toString() || Math.random().toString(),
-            ar: item.productName || 'منتج بدون اسم',
-            en: item.productName || 'Product',
+            ar: names.ar,
+            en: names.en,
             price: item.price || item.unitPrice || item.sellingPrice || item.purchasePrice || 0,
             stock: totalStock,
             categoryId: item.categoryId ? item.categoryId.toString() : 'all',
-            icon: '📦', // أيقونة افتراضية
-            // إذا الباك اند بيرجع رابط صورة حقيقي مستقبلاً (imageUrl) نستخدمه، وإلا نولّد أفاتار محلي
-            image: item.imageUrl || generateProductAvatar(item.productName || 'منتج'),
+            icon: '📦',
+            image: item.imageUrl || generateProductAvatar(names.en || names.ar),
             barcode: item.barcode || '',
             code: item.productCode || ''
           };
         });
 
-        // تحديث القائمة بالمنتجات الحقيقية
         setProductList(mappedProducts);
+      } else {
+        // ✅ قاعدة البيانات فعلاً فاضية (أو رجّعت مصفوفة فاضية) — لازم نفرّغ القائمة
+        // بدل ما نضل ماسكين INITIAL_PRODUCTS الوهمية يلي معرّفاتها نصية (p1, p2...)
+        // وما بتصلح لإرسالها كـ productId رقمي للباك اند
+        setProductList([]);
       }
     } catch (error) {
       console.error("حدث خطأ أثناء جلب المنتجات:", error);
+      setProductList([]);
     }
   }, []);
 
@@ -298,15 +334,18 @@ export default function QuickSaleScreen() {
     // 1. التأكد من الاتصال
     startSignalRConnection();
 
-    // 2. الاستماع لتحديثات المخزون القادمة من الباك إند
-    connection.on("InventoryUpdated", () => {
-        console.log("تم تعديل المخزون من قبل المستودع! جاري تحديث قائمة المنتجات للكاشير...");
-        fetchProducts(); 
-    });
+    // 2. الدالة التي سيتم تنفيذها عند وصول تحديث
+    const handleDataChange = () => {
+        console.log("تغيّرت بيانات المخزون أو الفواتير! جاري تحديث قائمة المنتجات للكاشير...");
+        fetchProducts();
+    };
 
-    // 3. تنظيف الاستماع عند إغلاق الشاشة
+    // 3. الاستماع للحدث (استبدل "InventoryUpdated" باسم الحدث الصحيح من الباك إند)
+    connection.on("InventoryUpdated", handleDataChange);
+
+    // 4. تنظيف الاستماع عند إغلاق الشاشة
     return () => {
-        connection.off("InventoryUpdated");
+        connection.off("InventoryUpdated", handleDataChange);
     };
   }, [fetchProducts]);
 
@@ -315,8 +354,6 @@ export default function QuickSaleScreen() {
     return () => clearTimeout(id);
   }, []);
 
-  /* ---------------------- Toasts ---------------------- */
-
   const pushToast = useCallback((type: Toast['type'], text: string) => {
     const id = ++toastIdRef.current;
     setToasts((prev) => [...prev, { id, type, text }]);
@@ -324,8 +361,6 @@ export default function QuickSaleScreen() {
       setToasts((prev) => prev.filter((tt) => tt.id !== id));
     }, 2800);
   }, []);
-
-  /* ---------------------- Derived data ---------------------- */
 
   const filteredProducts = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -347,8 +382,6 @@ export default function QuickSaleScreen() {
   const taxable = subtotal - discount;
   const tax = Math.round(taxable * TAX_RATE);
   const total = taxable + tax;
-
-  /* ---------------------- Actions ---------------------- */
 
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.price) return;
@@ -385,7 +418,6 @@ export default function QuickSaleScreen() {
       );
       if (!confirmed) return;
 
-      // حذف تفاؤلي (Optimistic) من الواجهة فوراً لتجربة استخدام سلسة
       const productBackup = productList.find((p) => p.id === id);
       setProductList((prev) => prev.filter((p) => p.id !== id));
       setCart((prev) => prev.filter((c) => c.id !== id));
@@ -395,7 +427,6 @@ export default function QuickSaleScreen() {
           pushToast('info', t.productDeleted);
         })
         .catch((err) => {
-          // فشل الحذف في الباك إند: نُعيد المنتج للواجهة لأنه لم يُحذف فعلياً
           console.error('فشل حذف المنتج من الباك إند:', err?.response?.data || err);
           if (productBackup) {
             setProductList((prev) => [...prev, productBackup]);
@@ -473,45 +504,61 @@ export default function QuickSaleScreen() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-// قيم ثابتة مؤقتة — المشروع لسا بمرحلة فرع/مستودع واحد (مبدأ YAGNI)
-const BRANCH_ID = 3;
-const WAREHOUSE_ID = 1;
+  const BRANCH_ID = 1;
+const WAREHOUSE_ID = 2;
 
-const completeSale = useCallback(async () => {
-  if (cart.length === 0 || !payMethod) return;
+  const completeSale = useCallback(async () => {
+    if (cart.length === 0 || !payMethod) return;
 
-  if (!customer) {
-    pushToast('error', t.selectCustomer);
-    return;
-  }
+    if (!customer) {
+      pushToast('error', t.selectCustomer);
+      return;
+    }
 
-  setIsSubmitting(true);
+    setIsSubmitting(true);
 
-  try {
-    const payload = {
-      customerId: Number(customer.id),
-      branchId: BRANCH_ID,
-      warehouseId: WAREHOUSE_ID,
-      discountAmount: discount > 0 ? discount : undefined,
-      items: cart.map((item) => ({
+    try {
+      const items = cart.map((item) => ({
         productId: Number(item.id),
         quantity: item.qty,
         unitPrice: item.price,
-      })),
-    };
+      }));
 
-    await axiosInstance.post('/invoices', payload);
+      // ✅ حارس أمان: يمنع إرسال أي عنصر معرّفه غير رقمي صالح (مثل بيانات وهمية/mock)
+      const invalidItem = items.find((i) => !Number.isFinite(i.productId) || i.productId <= 0);
+      if (invalidItem) {
+        pushToast('error', isRtl ? 'يوجد منتج غير صالح في السلة، الرجاء إعادة تحميل المنتجات' : 'Invalid product in cart, please reload products');
+        setIsSubmitting(false);
+        return;
+      }
 
-    pushToast('success', t.saleSuccess);
-    newSale();
-  } catch (error: any) {
-    const serverMessage = error.response?.data?.message;
-    pushToast('error', serverMessage || t.saleFailed);
-    console.error('فشل إتمام عملية البيع:', error);
-  } finally {
-    setIsSubmitting(false);
-  }
-}, [cart, payMethod, customer, discount, newSale, pushToast, t]);
+      const payload = {
+        customerId: Number(customer.id),
+        branchId: BRANCH_ID,
+        warehouseId: WAREHOUSE_ID,
+        paymentMethod: payMethod, // ✅ كان ناقص من الـ payload، وهو غالباً حقل مطلوب (required) بالـ DTO على الباك اند
+        discountAmount: discount > 0 ? discount : undefined,
+        items,
+      };
+
+      await axiosInstance.post('/invoices', payload);
+
+      pushToast('success', t.saleSuccess);
+      
+      // ✅ تحديث فوري (Optimistic) لقائمة المنتجات بعد نجاح البيع مباشرة
+      // بدل الانتظار الكامل لوصول حدث SignalR، حتى لا تظهر كميات قديمة
+      // على نفس شاشة الكاشير الذي أجرى عملية البيع
+      await fetchProducts();
+
+      newSale();
+    } catch (error: any) {
+      const serverMessage = error.response?.data?.message;
+      pushToast('error', serverMessage || t.saleFailed);
+      console.error('فشل إتمام عملية البيع:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [cart, payMethod, customer, discount, newSale, pushToast, t, fetchProducts]);
 
   const selectCustomer = useCallback(
     (c: Customer) => {
@@ -526,74 +573,74 @@ const completeSale = useCallback(async () => {
   );
 
   const handleAddCustomer = async () => {
-  if (!newCustomer.name.trim()) return;
+    if (!newCustomer.name.trim()) return;
 
-  setIsAddingCustomer(true);
-  try {
-    const response = await axiosInstance.post('/customers', {
-      customerName: newCustomer.name.trim(),
-      phone: newCustomer.phone.trim() || undefined,
-    });
-
-    const created = response.data;
-    const mapped: Customer = {
-      id: created.id?.toString() ?? created.Id?.toString(),
-      name: created.customerName ?? created.CustomerName,
-      phone: created.phone ?? created.Phone ?? '',
-      balance: created.currentBalance ?? created.CurrentBalance ?? 0,
-      invoiceCount: 0,
-      discountEligible: false,
-    };
-
-    setCustomer(mapped);
-    setShowAddCustomerModal(false);
-    setShowCustomerPicker(false);
-    setNewCustomer({ name: '', phone: '' });
-    pushToast('success', isRtl ? 'تمت إضافة العميل واختياره' : 'Customer added and selected');
-  } catch (error: any) {
-    const serverMessage = error.response?.data?.message;
-    pushToast('error', serverMessage || (isRtl ? 'فشل إضافة العميل' : 'Failed to add customer'));
-    console.error('فشل إنشاء عميل جديد:', error);
-  } finally {
-    setIsAddingCustomer(false);
-  }
-};
-useEffect(() => {
-  if (!showCustomerPicker) return;
-
-  if (!customerQuery.trim() || customerQuery.trim().length < 2) {
-    setCustomerResults([]);
-    return;
-  }
-
-  setIsSearchingCustomers(true);
-  const timeoutId = setTimeout(async () => {
+    setIsAddingCustomer(true);
     try {
-      const response = await axiosInstance.get('/customers/search', {
-        params: { query: customerQuery.trim(), take: 10 },
+      const response = await axiosInstance.post('/customers', {
+        customerName: newCustomer.name.trim(),
+        phone: newCustomer.phone.trim() || undefined,
       });
 
-      const mapped: Customer[] = response.data.map((c: any) => ({
-        id: c.id.toString(),
-        name: c.customerName,
-        phone: c.phone || c.mobile || '',
-        balance: c.currentBalance || 0,
+      const created = response.data;
+      const mapped: Customer = {
+        id: created.id?.toString() ?? created.Id?.toString(),
+        name: created.customerName ?? created.CustomerName,
+        phone: created.phone ?? created.Phone ?? '',
+        balance: created.currentBalance ?? created.CurrentBalance ?? 0,
         invoiceCount: 0,
         discountEligible: false,
-      }));
+      };
 
-      setCustomerResults(mapped);
-    } catch (error) {
-      console.error('فشل البحث عن العملاء:', error);
-      setCustomerResults([]);
+      setCustomer(mapped);
+      setShowAddCustomerModal(false);
+      setShowCustomerPicker(false);
+      setNewCustomer({ name: '', phone: '' });
+      pushToast('success', isRtl ? 'تمت إضافة العميل واختياره' : 'Customer added and selected');
+    } catch (error: any) {
+      const serverMessage = error.response?.data?.message;
+      pushToast('error', serverMessage || (isRtl ? 'فشل إضافة العميل' : 'Failed to add customer'));
+      console.error('فشل إنشاء عميل جديد:', error);
     } finally {
-      setIsSearchingCustomers(false);
+      setIsAddingCustomer(false);
     }
-  }, 400);
+  };
 
-  return () => clearTimeout(timeoutId);
-}, [customerQuery, showCustomerPicker]);
-  /* ---------------------- Keyboard shortcuts ---------------------- */
+  useEffect(() => {
+    if (!showCustomerPicker) return;
+
+    if (!customerQuery.trim() || customerQuery.trim().length < 2) {
+      setCustomerResults([]);
+      return;
+    }
+
+    setIsSearchingCustomers(true);
+    const timeoutId = setTimeout(async () => {
+      try {
+        const response = await axiosInstance.get('/customers/search', {
+          params: { query: customerQuery.trim(), take: 10 },
+        });
+
+        const mapped: Customer[] = response.data.map((c: any) => ({
+          id: c.id.toString(),
+          name: c.customerName,
+          phone: c.phone || c.mobile || '',
+          balance: c.currentBalance || 0,
+          invoiceCount: 0,
+          discountEligible: false,
+        }));
+
+        setCustomerResults(mapped);
+      } catch (error) {
+        console.error('فشل البحث عن العملاء:', error);
+        setCustomerResults([]);
+      } finally {
+        setIsSearchingCustomers(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timeoutId);
+  }, [customerQuery, showCustomerPicker]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -626,8 +673,6 @@ useEffect(() => {
 
   const dir = isRtl ? 'rtl' : 'ltr';
 
-  /* ---------------------- Render ---------------------- */
-
   return (
     <div dir={dir} className="flex flex-col h-full w-full bg-gradient-to-br from-slate-50 via-slate-50 to-indigo-50/40 text-slate-800 font-sans">
       <style>{`
@@ -641,7 +686,6 @@ useEffect(() => {
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(79,70,229,0.25); border-radius: 100px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(79,70,229,0.55); }
 
-        /* Modern elevation interaction — used on every card-like surface */
         .card-lift {
           transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
           will-change: transform;
@@ -675,7 +719,6 @@ useEffect(() => {
       `}</style>
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Categories */}
         <aside className="hidden md:flex flex-col w-44 flex-shrink-0 bg-white/80 backdrop-blur-sm border-e border-slate-200 py-3 px-2 gap-1 overflow-y-auto custom-scrollbar">
           {CATEGORIES.map((c) => {
             const isActive = activeCategory === c.id;
@@ -696,9 +739,7 @@ useEffect(() => {
           })}
         </aside>
 
-        {/* Products */}
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          {/* Search */}
           <div className="p-3 border-b border-slate-200 bg-white/80 backdrop-blur-sm flex-shrink-0">
             <div className="relative">
               <input
@@ -715,7 +756,6 @@ useEffect(() => {
             <div className="mt-2 text-[11px] text-slate-400">{t.shortcuts}</div>
           </div>
 
-          {/* Mobile category chips */}
           <div className="flex md:hidden gap-1.5 px-3 py-2 overflow-x-auto custom-scrollbar bg-white border-b border-slate-200 flex-shrink-0">
             {CATEGORIES.map((c) => {
               const isActive = activeCategory === c.id;
@@ -733,7 +773,6 @@ useEffect(() => {
             })}
           </div>
 
-          {/* Grid */}
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
             {isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -821,14 +860,12 @@ useEffect(() => {
           </div>
         </main>
 
-        {/* Cart */}
         <aside className="w-full max-w-[340px] flex-shrink-0 bg-white border-s border-slate-200 flex flex-col min-h-0">
           <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
             <h2 className="font-bold text-sm text-slate-700">🛒 {t.cart}</h2>
             <span className="text-xs text-slate-400">{cart.reduce((s, c) => s + c.qty, 0)}</span>
           </div>
 
-          {/* Customer */}
           <div className="px-4 py-3 border-b border-slate-200 flex-shrink-0">
             {customer ? (
               <div className="card-lift-sm rounded-xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 p-3 text-xs space-y-1">
@@ -854,7 +891,6 @@ useEffect(() => {
             )}
           </div>
 
-          {/* Items */}
           <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-2">
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-slate-300 gap-2 text-center px-4">
@@ -910,7 +946,6 @@ useEffect(() => {
             )}
           </div>
 
-          {/* Totals */}
           <div className="px-4 py-3 border-t border-slate-200 flex-shrink-0 space-y-1.5 text-xs">
             <div className="flex justify-between text-slate-500">
                <span>{t.subtotal}</span>
@@ -945,7 +980,6 @@ useEffect(() => {
               </button>
             )}
 
-            {/* Payment methods */}
             <div className="grid grid-cols-3 gap-1.5 pt-2">
               {(
                 [
@@ -980,7 +1014,6 @@ useEffect(() => {
         </aside>
       </div>
 
-      {/* Quick actions bar */}
       <div className="flex-shrink-0 bg-white/90 backdrop-blur-sm border-t border-slate-200 px-3 py-2 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
         <QuickAction icon="🛒" label={t.newSale} onClick={newSale} />
        <QuickAction icon="👤" label={t.addCustomer} onClick={() => setShowAddCustomerModal(true)} />
@@ -990,7 +1023,6 @@ useEffect(() => {
        <QuickAction icon="💳" label={t.pay} onClick={completeSale} disabled={cart.length === 0 || !payMethod || isSubmitting} highlight />
       </div>
 
-      {/* Add Product Modal */}
       {showAddProductModal && (
         <div className="fixed inset-0 z-40 bg-black/30 flex items-center justify-center p-4" onClick={() => setShowAddProductModal(false)}>
            <div
@@ -1036,7 +1068,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Customer picker modal */}
       {showCustomerPicker && (
         <div className="fixed inset-0 z-40 bg-black/30 flex items-center justify-center p-4" onClick={() => setShowCustomerPicker(false)}>
           <div
@@ -1108,7 +1139,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Add Customer Modal */}
       {showAddCustomerModal && (
         <div className="fixed inset-0 z-40 bg-black/30 flex items-center justify-center p-4" onClick={() => setShowAddCustomerModal(false)}>
           <div
@@ -1159,7 +1189,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Toasts */}
       <div className="fixed bottom-4 end-4 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map((toast) => (
           <div

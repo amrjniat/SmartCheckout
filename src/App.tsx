@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/profile page';
 import Login from './pages/Login';
@@ -8,7 +9,7 @@ import CashierDashboard from './pages/CashierDashboard';
 import DashboardLayout from './layouts/DashboardLayout';
 import WarehouseLayout from './layouts/WarehouseLayout';
 import CashierLayout from './layouts/casherlayout';
-
+import { startSignalRConnection } from './services/signalRService'; // بدون تغيير
 import ClientsPage from './pages/ClientsPage';
 
 // استيراد صفحة البيع السريع
@@ -39,6 +40,12 @@ import NotificationsPage from './pages/Notifications';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
+  useEffect(() => {
+const token = sessionStorage.getItem('token'); // ✅ تصحيح: كان localStorage
+    if (token) {
+      startSignalRConnection();
+    }
+  }, []);
   return (
     <BrowserRouter basename="/SmartCheckout">
       <Routes>

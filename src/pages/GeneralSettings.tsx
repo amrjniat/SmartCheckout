@@ -243,10 +243,10 @@ export default function GeneralSettings() {
   );
 
   return (
-    <div dir={isRtl ? 'rtl' : 'ltr'} className="flex h-screen bg-gradient-to-b from-[#F8FAFC] to-white text-gray-800 font-sans">
+    <div dir={isRtl ? 'rtl' : 'ltr'} className="flex min-h-dvh flex-col lg:flex-row bg-gradient-to-b from-[#F8FAFC] to-white text-gray-800 font-sans overflow-x-hidden">
 
       {/* Sidebar */}
-      <aside className={`w-72 bg-white ${isRtl ? 'border-l' : 'border-r'} border-gray-200 flex flex-col shadow-sm z-10`}>
+      <aside className={`w-full lg:w-72 bg-white ${isRtl ? 'lg:border-l' : 'lg:border-r'} border-b lg:border-b-0 border-gray-200 flex flex-col shadow-sm z-10`}>
         <div className="p-6 border-b border-gray-100">
           <div className="relative">
             <Search className={`absolute ${isRtl ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400`} size={18} />
@@ -282,15 +282,15 @@ export default function GeneralSettings() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col relative min-h-dvh overflow-hidden">
 
         {/* Page Header */}
-        <header className="px-8 py-6 bg-[#F8FAFC] flex justify-between items-end border-b border-gray-200 shrink-0">
+        <header className="px-4 sm:px-8 py-6 bg-[#F8FAFC] flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-end border-b border-gray-200 shrink-0">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t.pageTitle}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t.pageTitle}</h1>
             <p className="text-sm text-gray-500 mt-1">{t.pageSubtitle}</p>
           </div>
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             {hasUnsavedChanges ? (
               <span className="flex items-center gap-1.5 text-orange-600 font-medium bg-orange-50 px-3 py-1.5 rounded-lg">
                 <span className="relative flex h-2.5 w-2.5">
@@ -310,7 +310,7 @@ export default function GeneralSettings() {
         </header>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-8 pb-32">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 pb-24 sm:pb-32">
           <div className="max-w-4xl mx-auto space-y-4">
 
             {/* 1. Company Info */}

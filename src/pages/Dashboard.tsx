@@ -1,10 +1,11 @@
-// import { useState,useEffect } from 'react';
+// import { useState, useEffect, useCallback } from 'react';
 // import { useOutletContext } from 'react-router-dom';
 // import axiosInstance from '../services/axiosInstance';
-// import connection, { startSignalRConnection } from '../services/signalRService';
-// type LayoutContext = { isRtl: boolean; setIsRtl: (value: boolean) => void };
+// import connection, { startSignalRConnection, onAnyDataChange } from '../services/signalRService';
 
+// type LayoutContext = { isRtl: boolean; setIsRtl: (value: boolean) => void };
 // type TimeFilter = 'day' | 'week' | 'month';
+
 // interface DashboardData {
 //   sales: number;
 //   invoices: number;
@@ -19,6 +20,7 @@
 //     status: string;
 //   }[];
 // }
+
 // // بيانات الترجمة
 // const translations = {
 //   ar: {
@@ -91,13 +93,8 @@
 // const mapPeriodToBackend = (filter: TimeFilter): string => {
 //   return filter === 'day' ? 'today' : filter;
 // };
-// const filterTextData: Record<TimeFilter, string> = {
-//   day: 'filterTextDay',
-//   week: 'filterTextWeek',
-//   month: 'filterTextMonth'
-// };
 
-// // ✅ مكون البطاقة بعد إعادة الهيكلة الجذرية الشاملة
+// // مكون البطاقة
 // interface HoverCardProps {
 //   children: React.ReactNode;
 //   className?: string;
@@ -141,7 +138,7 @@
 //   );
 // };
 
-// // ✅ مكون صف المنتج - تم تعديل الـ Hover لمنع تعارض المصفوفات (نقطة 12)
+// // مكون صف المنتج
 // const ProductRow = ({
 //   product,
 //   index
@@ -153,8 +150,8 @@
 //     <div className="flex justify-between items-center text-sm">
 //       <span className="text-slate-400 text-xs">{product.salesCount}</span>
 //       <span className="font-semibold text-slate-800">
-//   {product.nameKey}
-// </span>
+//         {product.nameKey}
+//       </span>
 //     </div>
 //     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
 //       <div
@@ -167,45 +164,24 @@
 //   </div>
 // );
 
-// // مكون زر الفلتر
-// const FilterButton = ({
-//   active,
-//   onClick,
-//   children
-// }: {
-//   active: boolean;
-//   onClick: () => void;
-//   children: React.ReactNode;
-// }) => (
-//   <button
-//     onClick={onClick}
-//     className={`px-4 py-2 rounded-lg transition-all duration-200 ${
-//       active
-//         ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 scale-105'
-//         : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm'
-//     }`}
-//   >
-//     {children}
-//   </button>
-// );
-
 // export default function Dashboard() {
 //   const [activeFilter, setActiveFilter] = useState<TimeFilter>('day');
 //   const { isRtl } = useOutletContext<LayoutContext>();
 
 //   const t = translations[isRtl ? 'ar' : 'en'];
-// const [currentData, setCurrentData] = useState<DashboardData>({
-//   sales: 0,
-//   invoices: 0,
-//   profit: 0,
-//   lowStock: 0,
-//   topProducts: [],
-//   transactions: []
-// });
-// const [isLoading, setIsLoading] = useState(true);
-// const [error, setError] = useState<string | null>(null);
-// useEffect(() => {
-//   const fetchDashboardData = async () => {
+//   const [currentData, setCurrentData] = useState<DashboardData>({
+//     sales: 0,
+//     invoices: 0,
+//     profit: 0,
+//     lowStock: 0,
+//     topProducts: [],
+//     transactions: []
+//   });
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+
+//   // 1. تغليف الدالة بـ useCallback لمنع إعادة إنشائها مع كل رندر
+//   const fetchDashboardData = useCallback(async () => {
 //     setIsLoading(true);
 //     setError(null);
 
@@ -219,31 +195,31 @@
 //         axiosInstance.get(`/reports/top-products?period=${backendPeriod}&top=5`)
 //       ]);
 
-//  const latestTransactions = [...salesRes.data.data]
-//   .sort((a: any, b: any) => new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime())
-//   .slice(0, 5)
-//   .map((inv: any) => ({
-//     id: inv.invoiceNumber,
-//     clientKey: inv.customerName,
-//     time: new Date(inv.invoiceDate).toLocaleTimeString(isRtl ? 'ar' : 'en', { hour: '2-digit', minute: '2-digit' }),
-//     total: Number(inv.totalAmount).toLocaleString(),
-//     status: inv.status === 'مدفوعة' ? 'paid' : 'pending'
-//   }));
+//       const latestTransactions = [...salesRes.data.data]
+//         .sort((a: any, b: any) => new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime())
+//         .slice(0, 5)
+//         .map((inv: any) => ({
+//           id: inv.invoiceNumber,
+//           clientKey: inv.customerName,
+//           time: new Date(inv.invoiceDate).toLocaleTimeString(isRtl ? 'ar' : 'en', { hour: '2-digit', minute: '2-digit' }),
+//           total: Number(inv.totalAmount).toLocaleString(),
+//           status: inv.status === 'مدفوعة' ? 'paid' : 'pending'
+//         }));
 
-// const topProducts = topProductsRes.data.products.map((p: any) => ({
-//   nameKey: p.productName,
-//   salesCount: `${p.totalQuantity} ${isRtl ? 'قطعة' : 'pcs'}`,
-//   percentage: p.percentage
-// }));
+//       const topProducts = topProductsRes.data.products.map((p: any) => ({
+//         nameKey: p.productName,
+//         salesCount: `${p.totalQuantity} ${isRtl ? 'قطعة' : 'pcs'}`,
+//         percentage: p.percentage
+//       }));
 
-// setCurrentData({
-//   sales: salesRes.data.totalSales,
-//   invoices: salesRes.data.totalInvoices,
-//   profit: profitRes.data.netProfit,
-//   lowStock: inventoryRes.data.lowStockCount,
-//   topProducts,
-//   transactions: latestTransactions
-// });
+//       setCurrentData({
+//         sales: salesRes.data.totalSales,
+//         invoices: salesRes.data.totalInvoices,
+//         profit: profitRes.data.netProfit,
+//         lowStock: inventoryRes.data.lowStockCount,
+//         topProducts,
+//         transactions: latestTransactions
+//       });
 
 //     } catch (err: any) {
 //       console.error('Dashboard fetch error:', err);
@@ -251,21 +227,26 @@
 //     } finally {
 //       setIsLoading(false);
 //     }
-//   };
+//   }, [activeFilter, isRtl]); 
 
-//   fetchDashboardData();
-// }, [activeFilter]);
+//   // 2. الجلب الاعتيادي للبيانات عند تحميل الصفحة أو تغير الفلتر
+//   useEffect(() => {
+//     fetchDashboardData();
+//   }, [fetchDashboardData]);
 
-//   const getTranslatedValue = (key: string): string => {
-//     const translationsAr = translations.ar as Record<string, string>;
-//     const translationsEn = translations.en as Record<string, string>;
-//     return isRtl ? (translationsAr[key] || key) : (translationsEn[key] || key);
-//   };
+//   // 3. الاستماع للتحديثات اللحظية بواسطة SignalR
+//   useEffect(() => {
+//     startSignalRConnection();
 
-//   const getFilterText = (): string => {
-//     const filterKey = filterTextData[activeFilter];
-//     return t[filterKey as keyof typeof t] || '';
-//   };
+//     const unsubscribe = onAnyDataChange(() => {
+//       console.log("تغيّرت بيانات الفواتير أو المخزون! جاري تحديث بيانات المدير...");
+//       fetchDashboardData();
+//     });
+
+//     return () => {
+//       unsubscribe();
+//     };
+//   }, [fetchDashboardData]);
 
 //   const getStatusClass = (status: string): string => {
 //     return status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';
@@ -273,180 +254,77 @@
 
 //   return (
 //     <div className="min-h-screen bg-slate-50 text-right" dir={isRtl ? 'rtl' : 'ltr'}>
-
 //       <main className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
-
-//         {/* 💡 تطبيق الـ Parallax الحقيقي ثلاثي الأبعاد بتمرير إزاحات مختلفة ومستويات غائرة ومتطورة لكل عنصر (نقطة 1، 8، 9) */}
+        
+//         {/* قسم البطاقات */}
 //         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          
-//           {/* كرت المبيعات - أزرق */}
 //           <HoverCard accentColor="blue">
 //             <div className="flex justify-between items-start mb-4" style={{ transformStyle: 'preserve-3d' }}>
-//               <span 
-//                 className="text-sm font-semibold text-white/90 block"
-//                 style={{ 
-//                   transform: 'translateZ(45px) translateX(calc(var(--mx, 0) * -4px)) translateY(calc(var(--my, 0) * -4px))',
-//                   backfaceVisibility: 'hidden'
-//                 }}
-//               >
+//               <span className="text-sm font-semibold text-white/90 block" style={{ transform: 'translateZ(45px)', backfaceVisibility: 'hidden' }}>
 //                 {t.cardSales}
 //               </span>
-//               <div 
-//                 className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg"
-//                 style={{ 
-//                   transform: 'translateZ(75px) translateX(calc(var(--mx, 0) * -12px)) translateY(calc(var(--my, 0) * -12px))',
-//                   backfaceVisibility: 'hidden'
-//                 }}
-//               >
+//               <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg" style={{ transform: 'translateZ(75px)', backfaceVisibility: 'hidden' }}>
 //                 💰
 //               </div>
 //             </div>
-//             <div 
-//               className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight"
-//               style={{ 
-//                 transform: 'translateZ(100px) translateX(calc(var(--mx, 0) * -18px)) translateY(calc(var(--my, 0) * -18px))',
-//                 backfaceVisibility: 'hidden'
-//               }}
-//             >
+//             <div className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight" style={{ transform: 'translateZ(100px)', backfaceVisibility: 'hidden' }}>
 //               {currentData.sales}
 //             </div>
-//             <div 
-//               className="text-sm text-white/75 mt-1 block"
-//               style={{ 
-//                 transform: 'translateZ(30px) translateX(calc(var(--mx, 0) * -2px)) translateY(calc(var(--my, 0) * -2px))',
-//                 backfaceVisibility: 'hidden'
-//               }}
-//             >
+//             <div className="text-sm text-white/75 mt-1 block" style={{ transform: 'translateZ(30px)', backfaceVisibility: 'hidden' }}>
 //               {t.currency}
 //             </div>
 //           </HoverCard>
 
-//           {/* كرت الفواتير - بنفسجي */}
 //           <HoverCard accentColor="purple">
 //             <div className="flex justify-between items-start mb-4" style={{ transformStyle: 'preserve-3d' }}>
-//               <span 
-//                 className="text-sm font-semibold text-white/90 block"
-//                 style={{ 
-//                   transform: 'translateZ(45px) translateX(calc(var(--mx, 0) * -4px)) translateY(calc(var(--my, 0) * -4px))',
-//                   backfaceVisibility: 'hidden'
-//                 }}
-//               >
+//               <span className="text-sm font-semibold text-white/90 block" style={{ transform: 'translateZ(45px)', backfaceVisibility: 'hidden' }}>
 //                 {t.cardInvoices}
 //               </span>
-//               <div 
-//                 className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg"
-//                 style={{ 
-//                   transform: 'translateZ(75px) translateX(calc(var(--mx, 0) * -12px)) translateY(calc(var(--my, 0) * -12px))',
-//                   backfaceVisibility: 'hidden'
-//                 }}
-//               >
+//               <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg" style={{ transform: 'translateZ(75px)', backfaceVisibility: 'hidden' }}>
 //                 📄
 //               </div>
 //             </div>
-//             <div 
-//               className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight"
-//               style={{ 
-//                 transform: 'translateZ(100px) translateX(calc(var(--mx, 0) * -18px)) translateY(calc(var(--my, 0) * -18px))',
-//                 backfaceVisibility: 'hidden'
-//               }}
-//             >
+//             <div className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight" style={{ transform: 'translateZ(100px)', backfaceVisibility: 'hidden' }}>
 //               {currentData.invoices}
 //             </div>
-//             <div 
-//               className="text-sm text-white/75 mt-1 block"
-//               style={{ 
-//                 transform: 'translateZ(30px) translateX(calc(var(--mx, 0) * -2px)) translateY(calc(var(--my, 0) * -2px))',
-//                 backfaceVisibility: 'hidden'
-//               }}
-//             >
+//             <div className="text-sm text-white/75 mt-1 block" style={{ transform: 'translateZ(30px)', backfaceVisibility: 'hidden' }}>
 //               {t.invoiceUnit}
 //             </div>
 //           </HoverCard>
 
-//           {/* كرت الأرباح - أخضر */}
 //           <HoverCard accentColor="green">
 //             <div className="flex justify-between items-start mb-4" style={{ transformStyle: 'preserve-3d' }}>
-//               <span 
-//                 className="text-sm font-semibold text-white/90 block"
-//                 style={{ 
-//                   transform: 'translateZ(45px) translateX(calc(var(--mx, 0) * -4px)) translateY(calc(var(--my, 0) * -4px))',
-//                   backfaceVisibility: 'hidden'
-//                 }}
-//               >
+//               <span className="text-sm font-semibold text-white/90 block" style={{ transform: 'translateZ(45px)', backfaceVisibility: 'hidden' }}>
 //                 {t.cardProfit}
 //               </span>
-//               <div 
-//                 className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg"
-//                 style={{ 
-//                   transform: 'translateZ(75px) translateX(calc(var(--mx, 0) * -12px)) translateY(calc(var(--my, 0) * -12px))',
-//                   backfaceVisibility: 'hidden'
-//                 }}
-//               >
+//               <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg" style={{ transform: 'translateZ(75px)', backfaceVisibility: 'hidden' }}>
 //                 📈
 //               </div>
 //             </div>
-//             <div 
-//               className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight"
-//               style={{ 
-//                 transform: 'translateZ(100px) translateX(calc(var(--mx, 0) * -18px)) translateY(calc(var(--my, 0) * -18px))',
-//                 backfaceVisibility: 'hidden'
-//               }}
-//             >
+//             <div className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight" style={{ transform: 'translateZ(100px)', backfaceVisibility: 'hidden' }}>
 //               {currentData.profit}
 //             </div>
-//             <div 
-//               className="text-sm text-white/75 mt-1 block"
-//               style={{ 
-//                 transform: 'translateZ(30px) translateX(calc(var(--mx, 0) * -2px)) translateY(calc(var(--my, 0) * -2px))',
-//                 backfaceVisibility: 'hidden'
-//               }}
-//             >
+//             <div className="text-sm text-white/75 mt-1 block" style={{ transform: 'translateZ(30px)', backfaceVisibility: 'hidden' }}>
 //               {t.currency}
 //             </div>
 //           </HoverCard>
 
-//           {/* كرت المخزون المنخفض - برتقالي */}
 //           <HoverCard accentColor="orange">
 //             <div className="flex justify-between items-start mb-4" style={{ transformStyle: 'preserve-3d' }}>
-//               <span 
-//                 className="text-sm font-semibold text-white/90 block"
-//                 style={{ 
-//                   transform: 'translateZ(45px) translateX(calc(var(--mx, 0) * -4px)) translateY(calc(var(--my, 0) * -4px))',
-//                   backfaceVisibility: 'hidden'
-//                 }}
-//               >
+//               <span className="text-sm font-semibold text-white/90 block" style={{ transform: 'translateZ(45px)', backfaceVisibility: 'hidden' }}>
 //                 {t.cardLowStock}
 //               </span>
-//               <div 
-//                 className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg"
-//                 style={{ 
-//                   transform: 'translateZ(75px) translateX(calc(var(--mx, 0) * -12px)) translateY(calc(var(--my, 0) * -12px))',
-//                   backfaceVisibility: 'hidden'
-//                 }}
-//               >
+//               <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-lg" style={{ transform: 'translateZ(75px)', backfaceVisibility: 'hidden' }}>
 //                 ⚠️
 //               </div>
 //             </div>
-//             <div 
-//               className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight"
-//               style={{ 
-//                 transform: 'translateZ(100px) translateX(calc(var(--mx, 0) * -18px)) translateY(calc(var(--my, 0) * -18px))',
-//                 backfaceVisibility: 'hidden'
-//               }}
-//             >
+//             <div className="text-2xl sm:text-3xl font-black text-white text-right tracking-tight" style={{ transform: 'translateZ(100px)', backfaceVisibility: 'hidden' }}>
 //               {currentData.lowStock}
 //             </div>
-//             <div 
-//               className="text-sm text-white/75 mt-1 block"
-//               style={{ 
-//                 transform: 'translateZ(30px) translateX(calc(var(--mx, 0) * -2px)) translateY(calc(var(--my, 0) * -2px))',
-//                 backfaceVisibility: 'hidden'
-//               }}
-//             >
+//             <div className="text-sm text-white/75 mt-1 block" style={{ transform: 'translateZ(30px)', backfaceVisibility: 'hidden' }}>
 //               {t.itemUnit}
 //             </div>
 //           </HoverCard>
-
 //         </div>
 
 //         {/* قسم الجداول والتحليلات */}
@@ -471,7 +349,7 @@
 //                   {currentData.transactions.map((tx, index) => (
 //                     <tr key={`${tx.id}-${index}`} className="hover:bg-slate-50 transition-all duration-200">
 //                       <td className="px-3 sm:px-4 py-4 font-semibold text-blue-600">{tx.id}</td>
-//                     <td className="px-3 sm:px-4 py-4 text-slate-700">{tx.clientKey}</td>
+//                       <td className="px-3 sm:px-4 py-4 text-slate-700">{tx.clientKey}</td>
 //                       <td className="px-3 sm:px-4 py-4 text-slate-500">{tx.time}</td>
 //                       <td className="px-3 sm:px-4 py-4 font-bold text-slate-900">{tx.total} {t.currency}</td>
 //                       <td className="px-3 sm:px-4 py-4 text-center">
@@ -503,10 +381,12 @@
 
 
 
+
+
 import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
-import connection, { startSignalRConnection } from '../services/signalRService';
+import connection, { startSignalRConnection, onAnyDataChange } from '../services/signalRService';
 
 type LayoutContext = { isRtl: boolean; setIsRtl: (value: boolean) => void };
 type TimeFilter = 'day' | 'week' | 'month';
@@ -599,12 +479,6 @@ const mapPeriodToBackend = (filter: TimeFilter): string => {
   return filter === 'day' ? 'today' : filter;
 };
 
-const filterTextData: Record<TimeFilter, string> = {
-  day: 'filterTextDay',
-  week: 'filterTextWeek',
-  month: 'filterTextMonth'
-};
-
 // مكون البطاقة
 interface HoverCardProps {
   children: React.ReactNode;
@@ -675,28 +549,6 @@ const ProductRow = ({
   </div>
 );
 
-// مكون زر الفلتر
-const FilterButton = ({
-  active,
-  onClick,
-  children
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) => (
-  <button
-    onClick={onClick}
-    className={`px-4 py-2 rounded-lg transition-all duration-200 ${
-      active
-        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30 scale-105'
-        : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm'
-    }`}
-  >
-    {children}
-  </button>
-);
-
 export default function Dashboard() {
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('day');
   const { isRtl } = useOutletContext<LayoutContext>();
@@ -713,7 +565,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 1. تغليف الدالة بـ useCallback
+  // 1. تغليف الدالة بـ useCallback لمنع إعادة إنشائها مع كل رندر
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -728,7 +580,13 @@ export default function Dashboard() {
         axiosInstance.get(`/reports/top-products?period=${backendPeriod}&top=5`)
       ]);
 
-      const latestTransactions = [...salesRes.data.data]
+      // ✅ استخراج آمن لمصفوفة الفواتير مهما كان شكل الـ response
+      // (يدعم: array مباشرة، { data: [...] }, { invoices: [...] })
+      const salesArray: any[] = Array.isArray(salesRes.data)
+        ? salesRes.data
+        : salesRes.data?.data ?? salesRes.data?.invoices ?? [];
+
+      const latestTransactions = [...salesArray]
         .sort((a: any, b: any) => new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime())
         .slice(0, 5)
         .map((inv: any) => ({
@@ -739,17 +597,23 @@ export default function Dashboard() {
           status: inv.status === 'مدفوعة' ? 'paid' : 'pending'
         }));
 
-      const topProducts = topProductsRes.data.products.map((p: any) => ({
+      // ✅ استخراج آمن لمصفوفة المنتجات الأكثر مبيعاً
+      // (يدعم: array مباشرة، { products: [...] }, { data: [...] })
+      const productsArray: any[] = Array.isArray(topProductsRes.data)
+        ? topProductsRes.data
+        : topProductsRes.data?.products ?? topProductsRes.data?.data ?? [];
+
+      const topProducts = productsArray.map((p: any) => ({
         nameKey: p.productName,
         salesCount: `${p.totalQuantity} ${isRtl ? 'قطعة' : 'pcs'}`,
         percentage: p.percentage
       }));
 
       setCurrentData({
-        sales: salesRes.data.totalSales,
-        invoices: salesRes.data.totalInvoices,
-        profit: profitRes.data.netProfit,
-        lowStock: inventoryRes.data.lowStockCount,
+        sales: salesRes.data?.totalSales ?? 0,
+        invoices: salesRes.data?.totalInvoices ?? 0,
+        profit: profitRes.data?.netProfit ?? 0,
+        lowStock: inventoryRes.data?.lowStockCount ?? 0,
         topProducts,
         transactions: latestTransactions
       });
@@ -762,7 +626,7 @@ export default function Dashboard() {
     }
   }, [activeFilter, isRtl]); 
 
-  // 2. الجلب الاعتيادي للبيانات عند تغير الفلتر
+  // 2. الجلب الاعتيادي للبيانات عند تحميل الصفحة أو تغير الفلتر
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
@@ -771,32 +635,15 @@ export default function Dashboard() {
   useEffect(() => {
     startSignalRConnection();
 
-    connection.on("ReceiveNewSale", () => {
-      console.log("تمت عملية بيع جديدة! جاري تحديث بيانات المدير...");
-      fetchDashboardData(); 
-    });
-
-    connection.on("InventoryUpdated", () => {
-      console.log("تم تحديث المخزون! جاري تحديث بيانات المدير...");
+    const unsubscribe = onAnyDataChange(() => {
+      console.log("تغيّرت بيانات الفواتير أو المخزون! جاري تحديث بيانات المدير...");
       fetchDashboardData();
     });
 
     return () => {
-      connection.off("ReceiveNewSale");
-      connection.off("InventoryUpdated");
+      unsubscribe();
     };
   }, [fetchDashboardData]);
-
-  const getTranslatedValue = (key: string): string => {
-    const translationsAr = translations.ar as Record<string, string>;
-    const translationsEn = translations.en as Record<string, string>;
-    return isRtl ? (translationsAr[key] || key) : (translationsEn[key] || key);
-  };
-
-  const getFilterText = (): string => {
-    const filterKey = filterTextData[activeFilter];
-    return t[filterKey as keyof typeof t] || '';
-  };
 
   const getStatusClass = (status: string): string => {
     return status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700';

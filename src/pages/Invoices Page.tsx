@@ -1,3 +1,8 @@
+
+
+
+
+
 // import { useState, useMemo, useRef, useEffect } from 'react';
 // import { useOutletContext } from 'react-router-dom';
 
@@ -546,7 +551,7 @@
 //   };
 
 //   return (
-//     <div className="w-full min-h-full px-4 sm:px-6 py-6 space-y-5" dir={isRtl ? 'rtl' : 'ltr'}>
+//     <div className="w-full min-h-full px-4 sm:px-6 py-6 space-y-5 bg-gradient-to-b from-slate-50 via-white to-slate-50/70" dir={isRtl ? 'rtl' : 'ltr'}>
 //       {/* ===== عنوان الصفحة + أزرار العمليات ===== */}
 //       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 //         <div>
@@ -590,7 +595,7 @@
 //             </>
 //           )}
 
-//           <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/30">
+//           <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-800 text-white text-xs font-bold hover:from-blue-700 hover:to-indigo-900 transition-all duration-300 shadow-md shadow-blue-900/30 hover:-translate-y-0.5">
 //             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 //               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
 //             </svg>
@@ -618,7 +623,7 @@
 //       </div>
 
 //       {/* ===== البحث + الفلاتر ===== */}
-//       <div className="bg-white border border-slate-100 rounded-2xl p-4 space-y-3">
+//       <div className="bg-white/80 backdrop-blur-sm border border-slate-100 rounded-2xl p-4 space-y-3 shadow-sm hover:shadow-md transition-shadow duration-300">
 //         <div className="relative">
 //           <Icon.Search className="w-4 h-4 text-slate-400 absolute top-1/2 -translate-y-1/2 start-3.5" />
 //           <input
@@ -684,11 +689,11 @@
 //       </div>
 
 //       {/* ===== جدول الفواتير ===== */}
-//       <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden">
+//       <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
 //         <div className="overflow-x-auto">
 //           <table className="w-full text-sm">
 //             <thead>
-//               <tr className="border-b border-slate-100 bg-slate-50/60">
+//               <tr className="border-b border-slate-100 bg-gradient-to-l from-slate-50 to-white">
 //                 <Th>{t.thInvoice}</Th>
 //                 <ThSortable label={t.thDate} active={sortKey === 'date'} dir={sortDir} onClick={() => toggleSort('date')} />
 //                 <Th className="hidden md:table-cell">{t.thTime}</Th>
@@ -797,8 +802,8 @@
 //                 <button
 //                   key={i}
 //                   onClick={() => setPage(i + 1)}
-//                   className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${
-//                     currentPage === i + 1 ? 'bg-blue-600 text-white' : 'text-slate-500 hover:bg-slate-50'
+//                   className={`w-7 h-7 rounded-lg text-xs font-bold transition-all duration-200 ${
+//                     currentPage === i + 1 ? 'bg-gradient-to-br from-blue-600 to-indigo-800 text-white shadow-sm shadow-blue-900/30' : 'text-slate-500 hover:bg-slate-50'
 //                   }`}
 //                 >
 //                   {i + 1}
@@ -848,18 +853,50 @@
 //   value: string;
 //   accent: 'blue' | 'emerald' | 'purple' | 'amber';
 // }) {
-//   const styles: Record<string, string> = {
-//     blue: 'bg-blue-50 text-blue-600',
-//     emerald: 'bg-emerald-50 text-emerald-600',
-//     purple: 'bg-purple-50 text-purple-600',
-//     amber: 'bg-amber-50 text-amber-600',
+//   const styles: Record<string, { card: string; iconBox: string; glow: string; blob: string; value: string }> = {
+//     blue: {
+//       card: 'from-blue-100 via-blue-50 to-indigo-100 border-blue-200/70',
+//       iconBox: 'from-blue-700 to-indigo-950 shadow-blue-950/40',
+//       glow: 'hover:shadow-blue-950/25',
+//       blob: 'bg-blue-600/15 group-hover:bg-blue-600/25',
+//       value: 'text-blue-950',
+//     },
+//     emerald: {
+//       card: 'from-emerald-100 via-emerald-50 to-teal-100 border-emerald-200/70',
+//       iconBox: 'from-emerald-700 to-teal-950 shadow-emerald-950/40',
+//       glow: 'hover:shadow-emerald-950/25',
+//       blob: 'bg-emerald-600/15 group-hover:bg-emerald-600/25',
+//       value: 'text-emerald-950',
+//     },
+//     purple: {
+//       card: 'from-purple-100 via-purple-50 to-fuchsia-100 border-purple-200/70',
+//       iconBox: 'from-purple-700 to-fuchsia-950 shadow-purple-950/40',
+//       glow: 'hover:shadow-purple-950/25',
+//       blob: 'bg-purple-600/15 group-hover:bg-purple-600/25',
+//       value: 'text-purple-950',
+//     },
+//     amber: {
+//       card: 'from-amber-100 via-amber-50 to-orange-100 border-amber-200/70',
+//       iconBox: 'from-amber-700 to-orange-950 shadow-amber-950/40',
+//       glow: 'hover:shadow-amber-950/25',
+//       blob: 'bg-amber-600/15 group-hover:bg-amber-600/25',
+//       value: 'text-amber-950',
+//     },
 //   };
+//   const s = styles[accent];
 //   return (
-//     <div className="bg-white border border-slate-100 rounded-2xl p-4 flex items-center gap-3 hover:shadow-md hover:shadow-slate-200/60 transition-shadow">
-//       <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${styles[accent]}`}>{icon}</div>
-//       <div className="min-w-0">
-//         <p className="text-[11px] font-bold text-slate-400 truncate">{label}</p>
-//         <p className="text-lg font-black text-slate-800 truncate">{value}</p>
+//     <div
+//       className={`group relative bg-gradient-to-br ${s.card} border rounded-2xl p-5 flex items-center gap-4 overflow-hidden shadow-sm hover:shadow-xl ${s.glow} transition-all duration-300 hover:-translate-y-2 cursor-default`}
+//     >
+//       <div className={`absolute -left-7 -top-7 w-28 h-28 rounded-full blur-2xl transition-colors duration-300 ${s.blob}`}></div>
+//       <div
+//         className={`relative z-10 w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br ${s.iconBox} text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 [&_svg]:w-6 [&_svg]:h-6`}
+//       >
+//         {icon}
+//       </div>
+//       <div className="min-w-0 relative z-10">
+//         <p className="text-[13px] font-bold text-slate-500 truncate">{label}</p>
+//         <p className={`text-2xl font-black truncate ${s.value}`}>{value}</p>
 //       </div>
 //     </div>
 //   );
@@ -1090,107 +1127,30 @@
 
 
 
-
-
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import {
+  getInvoices,
+  getInvoiceById,
+  updateInvoiceStatus,
+  type InvoiceStatus,
+  type InvoiceListItem,
+  type InvoiceDetail,
+} from '../services/invoiceService'; // ⚠️ عدّل المسار حسب مكان الملف الفعلي عندك
 
 /* =========================================================
    الأنواع (Types)
+   ملاحظة: InvoiceStatus مستورد من invoiceService.ts — 3 قيم فقط
+   ("مدفوعة" | "غير مدفوعة" | "ملغاة"). لا يوجد "مرتجعة" ولا
+   paymentMethod بالباك إند الحقيقي، فحُذفا من هذا الملف بالكامل.
 ========================================================= */
-type PaymentMethod = 'cash' | 'card' | 'wallet';
-type InvoiceStatus = 'paid' | 'pending' | 'cancelled' | 'returned';
-type UserRole = 'manager' | 'cashier';
-
-interface InvoiceItem {
-  id: string;
-  name: { ar: string; en: string };
-  qty: number;
-  price: number;
-}
-
-interface Invoice {
-  id: string;
-  invoiceNo: string;
-  date: string; // YYYY-MM-DD
-  time: string; // HH:mm
-  customerName: { ar: string; en: string };
-  customerPhone: string;
-  cashier: { ar: string; en: string };
-  paymentMethod: PaymentMethod;
-  status: InvoiceStatus;
-  discount: number;
-  taxRate: number; // percentage
-  items: InvoiceItem[];
-}
-
 type OutletCtx = { isRtl: boolean; setIsRtl: (v: boolean) => void; setPageData: React.Dispatch<React.SetStateAction<any>> };
 
-/* =========================================================
-   بيانات تجريبية (Mock data)
-========================================================= */
-const CASHIERS = [
-  { ar: 'عمرو عمار', en: 'Amr Ammar' },
-  { ar: 'ليلى حسن', en: 'Layla Hassan' },
-  { ar: 'كريم صالح', en: 'Kareem Saleh' },
-];
-
-const CUSTOMERS = [
-  { ar: 'أحمد علي', en: 'Ahmad Ali' },
-  { ar: 'سارة محمود', en: 'Sara Mahmoud' },
-  { ar: 'زبون نقدي', en: 'Walk-in Customer' },
-  { ar: 'رامي خالد', en: 'Rami Khaled' },
-  { ar: 'نور الدين', en: 'Nour Eddin' },
-];
-
-const PRODUCT_POOL = [
-  { ar: 'أرز بسمتي 5 كغ', en: 'Basmati Rice 5kg', price: 42000 },
-  { ar: 'زيت دوار الشمس 1.8 ل', en: 'Sunflower Oil 1.8L', price: 28000 },
-  { ar: 'سكر أبيض 1 كغ', en: 'White Sugar 1kg', price: 8500 },
-  { ar: 'شاي أحمر 400غ', en: 'Black Tea 400g', price: 15000 },
-  { ar: 'معجون طماطم', en: 'Tomato Paste', price: 6000 },
-  { ar: 'صابون غسيل', en: 'Laundry Soap', price: 4500 },
-  { ar: 'حليب بودرة', en: 'Powdered Milk', price: 32000 },
-  { ar: 'مياه معدنية 1.5 ل', en: 'Mineral Water 1.5L', price: 2000 },
-];
-
-function seedInvoices(): Invoice[] {
-  const statuses: InvoiceStatus[] = ['paid', 'paid', 'paid', 'pending', 'cancelled', 'returned'];
-  const methods: PaymentMethod[] = ['cash', 'cash', 'card', 'wallet'];
-  const list: Invoice[] = [];
-  for (let i = 0; i < 34; i++) {
-    const itemCount = 1 + (i % 5);
-    const items: InvoiceItem[] = Array.from({ length: itemCount }).map((_, idx) => {
-      const p = PRODUCT_POOL[(i + idx) % PRODUCT_POOL.length];
-      return {
-        id: `${i}-${idx}`,
-        name: { ar: p.ar, en: p.en },
-        qty: 1 + ((i + idx) % 3),
-        price: p.price,
-      };
-    });
-    const dayOffset = i % 12;
-    const d = new Date(2026, 6, 13 - dayOffset);
-    list.push({
-      id: `inv-${i}`,
-      invoiceNo: `INV-${(1042 - i).toString().padStart(4, '0')}`,
-      date: d.toISOString().slice(0, 10),
-      time: `${(8 + (i % 10)).toString().padStart(2, '0')}:${((i * 7) % 60).toString().padStart(2, '0')}`,
-      customerName: CUSTOMERS[i % CUSTOMERS.length],
-      customerPhone: `09${(30000000 + i * 137).toString().slice(0, 8)}`,
-      cashier: CASHIERS[i % CASHIERS.length],
-      paymentMethod: methods[i % methods.length],
-      status: statuses[i % statuses.length],
-      discount: i % 4 === 0 ? 5000 : 0,
-      taxRate: 0,
-      items,
-    });
-  }
-  return list;
-}
-
-const ALL_INVOICES = seedInvoices();
 const PAGE_SIZE = 8;
+// pageSize كبير لجلب كل الفواتير دفعة واحدة — تُستخدم كمصدر وحيد للبحث/الفلترة/الترتيب/الإحصائيات
+// عبر الفرونت إند بما إن الباك إند ما فيه endpoint للإجماليات ولا بحث نصي عام.
+// ⚠️ حل مؤقت مقبول للحجم الحالي من البيانات فقط — يحتاج مراجعة لو كبر عدد الفواتير بشكل كبير مستقبلاً.
+const FETCH_ALL_PAGE_SIZE = 1000;
 
 /* =========================================================
    الترجمة
@@ -1198,17 +1158,17 @@ const PAGE_SIZE = 8;
 const translations = {
   ar: {
     pageTitle: 'الفواتير والمبيعات',
-    pageSubtitle: 'إدارة جميع الفواتير الصادرة والمرتجعات',
+    pageSubtitle: 'إدارة جميع الفواتير الصادرة',
     newInvoice: 'فاتورة جديدة',
     exportExcel: 'Excel',
     exportPdf: 'PDF',
 
     statTotalInvoices: 'إجمالي الفواتير',
     statTotalSales: 'إجمالي المبيعات',
-    statReturns: 'المرتجعات',
-    statPending: 'الفواتير المعلقة',
+    statUnpaid: 'غير مدفوعة',
+    statCancelled: 'ملغاة',
 
-    searchPlaceholder: 'ابحث برقم الفاتورة، العميل، الهاتف أو الكاشير...',
+    searchPlaceholder: 'ابحث برقم الفاتورة، العميل أو المستخدم...',
     filterDate: 'التاريخ',
     filterDateAll: 'كل الفترات',
     filterDateToday: 'اليوم',
@@ -1218,18 +1178,8 @@ const translations = {
     filterStatus: 'حالة الفاتورة',
     statusAll: 'الكل',
     statusPaid: 'مدفوعة',
-    statusPending: 'معلقة',
+    statusUnpaid: 'غير مدفوعة',
     statusCancelled: 'ملغاة',
-    statusReturned: 'مرتجعة',
-
-    filterPayment: 'طريقة الدفع',
-    paymentAll: 'الكل',
-    paymentCash: 'نقدي',
-    paymentCard: 'بطاقة',
-    paymentWallet: 'محفظة إلكترونية',
-
-    filterCashier: 'الكاشير',
-    cashierAll: 'كل الكاشيرين',
 
     resultsCount: (n: number) => `عرض ${n} فاتورة`,
 
@@ -1237,9 +1187,8 @@ const translations = {
     thDate: 'التاريخ',
     thTime: 'الوقت',
     thCustomer: 'العميل',
-    thCashier: 'الكاشير',
-    thItems: 'عدد المنتجات',
-    thPayment: 'طريقة الدفع',
+    thUser: 'المستخدم',
+    thItems: 'عدد الأصناف',
     thTotal: 'الإجمالي',
     thStatus: 'الحالة',
     thActions: 'العمليات',
@@ -1253,52 +1202,51 @@ const translations = {
     emptyTitle: 'لا توجد فواتير مطابقة للفلاتر الحالية',
     emptySubtitle: 'جرّب تعديل البحث أو إزالة بعض الفلاتر',
 
+    loadingTitle: 'جارِ تحميل الفواتير...',
+    errorTitle: 'تعذّر تحميل الفواتير',
+    retry: 'إعادة المحاولة',
+
     pagePrev: 'السابق',
     pageNext: 'التالي',
-    pageOf: (p: number, total: number) => `صفحة ${p} من ${total}`,
 
     modalTitle: 'تفاصيل الفاتورة',
     modalInvoiceNo: 'رقم الفاتورة',
     modalDate: 'التاريخ',
     modalCustomer: 'اسم العميل',
-    modalCashier: 'اسم الكاشير',
+    modalUser: 'اسم المستخدم',
     modalProduct: 'المنتج',
     modalQty: 'الكمية',
     modalPrice: 'السعر',
     modalLineTotal: 'الإجمالي',
-    modalSubtotal: 'المجموع',
+    modalSubtotal: 'المجموع الفرعي',
     modalDiscount: 'الخصم',
     modalTax: 'الضريبة',
-    modalGrandTotal: 'الإجمالي',
-    modalPaymentMethod: 'طريقة الدفع',
+    modalGrandTotal: 'الإجمالي الكلي',
     modalClose: 'إغلاق',
+    modalLoading: 'جارِ تحميل التفاصيل...',
 
     copyDone: 'تم نسخ رقم الفاتورة',
     toastCancelled: (no: string) => `تم إلغاء الفاتورة ${no}`,
     toastReturned: (no: string) => `تم تسجيل مرتجع للفاتورة ${no}`,
-
-    role: 'الدور',
-    roleManager: 'مدير',
-    roleCashier: 'كاشير',
+    toastError: 'حدث خطأ، حاول مرة أخرى',
 
     sortHint: 'اضغط للترتيب',
     currency: 'ل.س',
-    unitItem: 'مادة',
-    noPermission: 'لا تملك صلاحية القيام بهذا الإجراء',
+    unitItem: 'صنف',
   },
   en: {
     pageTitle: 'Sales & Invoices',
-    pageSubtitle: 'Manage all issued invoices and returns',
+    pageSubtitle: 'Manage all issued invoices',
     newInvoice: 'New Invoice',
     exportExcel: 'Excel',
     exportPdf: 'PDF',
 
     statTotalInvoices: 'Total Invoices',
     statTotalSales: 'Total Sales',
-    statReturns: 'Returns',
-    statPending: 'Pending Invoices',
+    statUnpaid: 'Unpaid',
+    statCancelled: 'Cancelled',
 
-    searchPlaceholder: 'Search by invoice no., customer, phone or cashier...',
+    searchPlaceholder: 'Search by invoice no., customer or user...',
     filterDate: 'Date',
     filterDateAll: 'All time',
     filterDateToday: 'Today',
@@ -1308,18 +1256,8 @@ const translations = {
     filterStatus: 'Invoice Status',
     statusAll: 'All',
     statusPaid: 'Paid',
-    statusPending: 'Pending',
+    statusUnpaid: 'Unpaid',
     statusCancelled: 'Cancelled',
-    statusReturned: 'Returned',
-
-    filterPayment: 'Payment Method',
-    paymentAll: 'All',
-    paymentCash: 'Cash',
-    paymentCard: 'Card',
-    paymentWallet: 'E-Wallet',
-
-    filterCashier: 'Cashier',
-    cashierAll: 'All cashiers',
 
     resultsCount: (n: number) => `Showing ${n} invoices`,
 
@@ -1327,9 +1265,8 @@ const translations = {
     thDate: 'Date',
     thTime: 'Time',
     thCustomer: 'Customer',
-    thCashier: 'Cashier',
+    thUser: 'User',
     thItems: 'Items',
-    thPayment: 'Payment',
     thTotal: 'Total',
     thStatus: 'Status',
     thActions: 'Actions',
@@ -1343,15 +1280,18 @@ const translations = {
     emptyTitle: 'No invoices match the current filters',
     emptySubtitle: 'Try adjusting your search or clearing some filters',
 
+    loadingTitle: 'Loading invoices...',
+    errorTitle: 'Failed to load invoices',
+    retry: 'Retry',
+
     pagePrev: 'Previous',
     pageNext: 'Next',
-    pageOf: (p: number, total: number) => `Page ${p} of ${total}`,
 
     modalTitle: 'Invoice Details',
     modalInvoiceNo: 'Invoice No.',
     modalDate: 'Date',
     modalCustomer: 'Customer Name',
-    modalCashier: 'Cashier Name',
+    modalUser: 'User Name',
     modalProduct: 'Product',
     modalQty: 'Qty',
     modalPrice: 'Price',
@@ -1360,21 +1300,17 @@ const translations = {
     modalDiscount: 'Discount',
     modalTax: 'Tax',
     modalGrandTotal: 'Grand Total',
-    modalPaymentMethod: 'Payment Method',
     modalClose: 'Close',
+    modalLoading: 'Loading details...',
 
     copyDone: 'Invoice number copied',
     toastCancelled: (no: string) => `Invoice ${no} cancelled`,
     toastReturned: (no: string) => `Return recorded for invoice ${no}`,
-
-    role: 'Role',
-    roleManager: 'Manager',
-    roleCashier: 'Cashier',
+    toastError: 'Something went wrong, please try again',
 
     sortHint: 'Click to sort',
     currency: 'SYP',
     unitItem: 'items',
-    noPermission: "You don't have permission for this action",
   },
 };
 
@@ -1448,6 +1384,11 @@ const Icon = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 13h6m-3-9a9 9 0 100 18 9 9 0 000-18zm0 5v4l2.5 2.5" />
     </svg>
   ),
+  Alert: (p: { className?: string }) => (
+    <svg className={p.className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+    </svg>
+  ),
 };
 
 /* =========================================================
@@ -1455,12 +1396,20 @@ const Icon = {
 ========================================================= */
 function StatusBadge({ status, t }: { status: InvoiceStatus; t: typeof translations.ar }) {
   const map: Record<InvoiceStatus, { label: string; cls: string; dot: string }> = {
-    paid: { label: t.statusPaid, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
-    pending: { label: t.statusPending, cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
-    cancelled: { label: t.statusCancelled, cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
-    returned: { label: t.statusReturned, cls: 'bg-purple-50 text-purple-700 border-purple-200', dot: 'bg-purple-500' },
+    'مدفوعة': { label: t.statusPaid, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
+    'غير مدفوعة': { label: t.statusUnpaid, cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
+    'ملغاة': { label: t.statusCancelled, cls: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-500' },
   };
   const s = map[status];
+  if (!s) {
+    // قيمة غير متوقعة قادمة من الباك إند (بما إنه لا يتحقق من status) — نعرضها كما هي بدون كسر الواجهة
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border bg-slate-50 text-slate-600 border-slate-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+        {status}
+      </span>
+    );
+  }
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border ${s.cls}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
@@ -1496,68 +1445,67 @@ export default function Invoices() {
   const setPageData = ctx?.setPageData;
   const t = isRtl ? translations.ar : translations.en;
 
-  // استدعاء (إظهار) الشريط الرئيسي لهذه الصفحة
   useEffect(() => {
     setPageData?.({ showHeader: true });
   }, [setPageData]);
-  const lang: 'ar' | 'en' = isRtl ? 'ar' : 'en';
 
-  const [role, setRole] = useState<UserRole>('manager');
-  const currentCashier = CASHIERS[0]; // يمثل الكاشير الحالي المسجل دخوله
+  // ===== بيانات الفواتير (من الـ API الحقيقي) =====
+  const [allInvoices, setAllInvoices] = useState<InvoiceListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
+  const loadInvoices = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getInvoices({ pageSize: FETCH_ALL_PAGE_SIZE });
+      setAllInvoices(res.invoices);
+    } catch (err) {
+      console.error('❌ خطأ أثناء جلب الفواتير:', err);
+      setError(t.errorTitle);
+    } finally {
+      setLoading(false);
+    }
+  }, [t.errorTitle]);
+
+  useEffect(() => {
+    loadInvoices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ===== فلاتر وبحث =====
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | InvoiceStatus>('all');
-  const [paymentFilter, setPaymentFilter] = useState<'all' | PaymentMethod>('all');
-  const [cashierFilter, setCashierFilter] = useState<string>('all');
 
   const [sortKey, setSortKey] = useState<'date' | 'total' | 'customer'>('date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   const [page, setPage] = useState(1);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // ===== نافذة التفاصيل =====
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<number | null>(null);
+  const [selectedInvoiceDetail, setSelectedInvoiceDetail] = useState<InvoiceDetail | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [statusOverrides, setStatusOverrides] = useState<Record<string, InvoiceStatus>>({});
-
-  const todayStr = '2026-07-13';
-
-  function invoiceTotal(inv: Invoice) {
-    const subtotal = inv.items.reduce((sum, it) => sum + it.qty * it.price, 0);
-    const tax = (subtotal - inv.discount) * (inv.taxRate / 100);
-    return subtotal - inv.discount + tax;
-  }
-
-  const scoped = useMemo(() => {
-    if (role === 'cashier') {
-      return ALL_INVOICES.filter((inv) => inv.cashier.en === currentCashier.en);
-    }
-    return ALL_INVOICES;
-  }, [role]);
+  // يتتبّع رقم الفاتورة قيد التحديث حالياً (لتعطيل أزرارها أثناء الطلب ومنع نقرات مكررة)
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return scoped.filter((inv) => {
-      const status = statusOverrides[inv.id] ?? inv.status;
+    const today = new Date();
+    return allInvoices.filter((inv) => {
       if (q) {
-        const hay = [
-          inv.invoiceNo,
-          inv.customerName.ar,
-          inv.customerName.en,
-          inv.customerPhone,
-          inv.cashier.ar,
-          inv.cashier.en,
-        ]
+        const hay = [inv.invoiceNumber, inv.customerName, inv.userName ?? '']
           .join(' ')
           .toLowerCase();
         if (!hay.includes(q)) return false;
       }
-      if (statusFilter !== 'all' && status !== statusFilter) return false;
-      if (paymentFilter !== 'all' && inv.paymentMethod !== paymentFilter) return false;
-      if (cashierFilter !== 'all' && inv.cashier.en !== cashierFilter) return false;
+      if (statusFilter !== 'all' && inv.status !== statusFilter) return false;
       if (dateFilter !== 'all') {
-        const d = new Date(inv.date);
-        const today = new Date(todayStr);
+        const d = new Date(inv.invoiceDate);
         const diffDays = Math.floor((today.getTime() - d.getTime()) / 86400000);
         if (dateFilter === 'today' && diffDays !== 0) return false;
         if (dateFilter === 'week' && diffDays > 7) return false;
@@ -1565,15 +1513,15 @@ export default function Invoices() {
       }
       return true;
     });
-  }, [scoped, search, statusFilter, paymentFilter, cashierFilter, dateFilter, statusOverrides]);
+  }, [allInvoices, search, statusFilter, dateFilter]);
 
   const sorted = useMemo(() => {
     const arr = [...filtered];
     arr.sort((a, b) => {
       let cmp = 0;
-      if (sortKey === 'date') cmp = `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`);
-      else if (sortKey === 'total') cmp = invoiceTotal(a) - invoiceTotal(b);
-      else cmp = a.customerName.en.localeCompare(b.customerName.en);
+      if (sortKey === 'date') cmp = a.invoiceDate.localeCompare(b.invoiceDate);
+      else if (sortKey === 'total') cmp = a.totalAmount - b.totalAmount;
+      else cmp = a.customerName.localeCompare(b.customerName);
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return arr;
@@ -1585,17 +1533,18 @@ export default function Invoices() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, paymentFilter, cashierFilter, dateFilter, role]);
+  }, [search, statusFilter, dateFilter]);
 
+  // ===== الإحصائيات — تُحسب على كامل الفواتير المجلوبة، بمعزل عن فلاتر البحث/الجدول =====
   const stats = useMemo(() => {
-    const totalInvoices = scoped.length;
-    const totalSales = scoped
-      .filter((inv) => (statusOverrides[inv.id] ?? inv.status) === 'paid')
-      .reduce((s, inv) => s + invoiceTotal(inv), 0);
-    const returns = scoped.filter((inv) => (statusOverrides[inv.id] ?? inv.status) === 'returned').length;
-    const pending = scoped.filter((inv) => (statusOverrides[inv.id] ?? inv.status) === 'pending').length;
-    return { totalInvoices, totalSales, returns, pending };
-  }, [scoped, statusOverrides]);
+    const totalInvoices = allInvoices.length;
+    const totalSales = allInvoices
+      .filter((inv) => inv.status === 'مدفوعة')
+      .reduce((s, inv) => s + inv.totalAmount, 0);
+    const unpaid = allInvoices.filter((inv) => inv.status === 'غير مدفوعة').length;
+    const cancelled = allInvoices.filter((inv) => inv.status === 'ملغاة').length;
+    return { totalInvoices, totalSales, unpaid, cancelled };
+  }, [allInvoices]);
 
   function toggleSort(key: 'date' | 'total' | 'customer') {
     if (sortKey === key) {
@@ -1606,38 +1555,80 @@ export default function Invoices() {
     }
   }
 
-  function handleCopy(inv: Invoice) {
-    navigator.clipboard?.writeText(inv.invoiceNo).catch(() => {});
+  function handleCopy(inv: InvoiceListItem) {
+    navigator.clipboard?.writeText(inv.invoiceNumber).catch(() => {});
     setCopiedId(inv.id);
     setTimeout(() => setCopiedId(null), 1500);
   }
 
-  function handleCancel(inv: Invoice) {
-    if (role !== 'manager') {
-      setToast(t.noPermission);
-      return;
+  async function handleOpenInvoice(id: number) {
+    setSelectedInvoiceId(id);
+    setSelectedInvoiceDetail(null);
+    setModalLoading(true);
+    try {
+      const detail = await getInvoiceById(id);
+      setSelectedInvoiceDetail(detail);
+    } catch (err) {
+      console.error(`❌ خطأ أثناء جلب تفاصيل الفاتورة رقم ${id}:`, err);
+      setToast(t.toastError);
+      setSelectedInvoiceId(null);
+    } finally {
+      setModalLoading(false);
     }
-    setStatusOverrides((prev) => ({ ...prev, [inv.id]: 'cancelled' }));
-    setToast(t.toastCancelled(inv.invoiceNo));
   }
 
-  function handleReturn(inv: Invoice) {
-    setStatusOverrides((prev) => ({ ...prev, [inv.id]: 'returned' }));
-    setToast(t.toastReturned(inv.invoiceNo));
+  // تحديث الحالة محلياً بعد نجاح الطلب — بدون إعادة جلب كامل القائمة من الخادم
+  function applyStatusLocally(id: number, status: InvoiceStatus) {
+    setAllInvoices((prev) => prev.map((inv) => (inv.id === id ? { ...inv, status } : inv)));
   }
 
-  const paymentLabel = (m: PaymentMethod) =>
-    m === 'cash' ? t.paymentCash : m === 'card' ? t.paymentCard : t.paymentWallet;
+  async function handleCancel(inv: InvoiceListItem) {
+    setUpdatingId(inv.id);
+    try {
+      await updateInvoiceStatus(inv.id, 'ملغاة');
+      applyStatusLocally(inv.id, 'ملغاة');
+      setToast(t.toastCancelled(inv.invoiceNumber));
+    } catch (err) {
+      console.error(`❌ خطأ أثناء إلغاء الفاتورة رقم ${inv.id}:`, err);
+      setToast(t.toastError);
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
+  // "مرتجع": لا توجد حالة "مرتجعة" بالباك إند — الإجراء يعيد الفاتورة إلى "غير مدفوعة"
+  async function handleReturn(inv: InvoiceListItem) {
+    setUpdatingId(inv.id);
+    try {
+      await updateInvoiceStatus(inv.id, 'غير مدفوعة');
+      applyStatusLocally(inv.id, 'غير مدفوعة');
+      setToast(t.toastReturned(inv.invoiceNumber));
+    } catch (err) {
+      console.error(`❌ خطأ أثناء تسجيل مرتجع للفاتورة رقم ${inv.id}:`, err);
+      setToast(t.toastError);
+    } finally {
+      setUpdatingId(null);
+    }
+  }
 
   const numberFmt = (n: number) => n.toLocaleString(isRtl ? 'ar-SY' : 'en-US');
+
+  const formatDate = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString(isRtl ? 'ar-SY' : 'en-US');
+  };
+  const formatTime = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleTimeString(isRtl ? 'ar-SY' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+  };
 
   const clearFilters = () => {
     setSearch('');
     setDateFilter('all');
     setStatusFilter('all');
-    setPaymentFilter('all');
-    setCashierFilter('all');
   };
+
+  const selectedInvoiceListItem = allInvoices.find((inv) => inv.id === selectedInvoiceId) ?? null;
 
   return (
     <div className="w-full min-h-full px-4 sm:px-6 py-6 space-y-5 bg-gradient-to-b from-slate-50 via-white to-slate-50/70" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -1649,40 +1640,20 @@ export default function Invoices() {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* تبديل الدور - لغرض العرض التوضيحي للصلاحيات */}
-          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-bold">
-            <button
-              onClick={() => setRole('manager')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${role === 'manager' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              {t.roleManager}
-            </button>
-            <button
-              onClick={() => setRole('cashier')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${role === 'cashier' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-            >
-              {t.roleCashier}
-            </button>
-          </div>
-
-          {role === 'manager' && (
-            <>
-              <button
-                onClick={() => setToast(`${t.exportExcel} ✓`)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-colors"
-              >
-                <Icon.Invoice className="w-4 h-4" />
-                {t.exportExcel}
-              </button>
-              <button
-                onClick={() => setToast(`${t.exportPdf} ✓`)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-colors"
-              >
-                <Icon.Pdf className="w-4 h-4" />
-                {t.exportPdf}
-              </button>
-            </>
-          )}
+          <button
+            onClick={() => setToast(`${t.exportExcel} ✓`)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-colors"
+          >
+            <Icon.Invoice className="w-4 h-4" />
+            {t.exportExcel}
+          </button>
+          <button
+            onClick={() => setToast(`${t.exportPdf} ✓`)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-colors"
+          >
+            <Icon.Pdf className="w-4 h-4" />
+            {t.exportPdf}
+          </button>
 
           <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-800 text-white text-xs font-bold hover:from-blue-700 hover:to-indigo-900 transition-all duration-300 shadow-md shadow-blue-900/30 hover:-translate-y-0.5">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1695,20 +1666,15 @@ export default function Invoices() {
 
       {/* ===== بطاقات إحصائية ===== */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={<Icon.Invoice className="w-5 h-5" />}
-          label={t.statTotalInvoices}
-          value={numberFmt(stats.totalInvoices)}
-          accent="blue"
-        />
+        <StatCard icon={<Icon.Invoice className="w-5 h-5" />} label={t.statTotalInvoices} value={numberFmt(stats.totalInvoices)} accent="blue" />
         <StatCard
           icon={<Icon.Cash className="w-5 h-5" />}
           label={t.statTotalSales}
           value={`${numberFmt(stats.totalSales)} ${t.currency}`}
           accent="emerald"
         />
-        <StatCard icon={<Icon.Return className="w-5 h-5" />} label={t.statReturns} value={numberFmt(stats.returns)} accent="purple" />
-        <StatCard icon={<Icon.Clock className="w-5 h-5" />} label={t.statPending} value={numberFmt(stats.pending)} accent="amber" />
+        <StatCard icon={<Icon.Clock className="w-5 h-5" />} label={t.statUnpaid} value={numberFmt(stats.unpaid)} accent="amber" />
+        <StatCard icon={<Icon.Ban className="w-5 h-5" />} label={t.statCancelled} value={numberFmt(stats.cancelled)} accent="purple" />
       </div>
 
       {/* ===== البحث + الفلاتر ===== */}
@@ -1739,36 +1705,15 @@ export default function Invoices() {
             onChange={(v) => setStatusFilter(v as typeof statusFilter)}
             options={[
               { value: 'all', label: t.statusAll },
-              { value: 'paid', label: t.statusPaid },
-              { value: 'pending', label: t.statusPending },
-              { value: 'cancelled', label: t.statusCancelled },
-              { value: 'returned', label: t.statusReturned },
+              { value: 'مدفوعة', label: t.statusPaid },
+              { value: 'غير مدفوعة', label: t.statusUnpaid },
+              { value: 'ملغاة', label: t.statusCancelled },
             ]}
           />
-          <FilterSelect
-            value={paymentFilter}
-            onChange={(v) => setPaymentFilter(v as typeof paymentFilter)}
-            options={[
-              { value: 'all', label: t.paymentAll },
-              { value: 'cash', label: t.paymentCash },
-              { value: 'card', label: t.paymentCard },
-              { value: 'wallet', label: t.paymentWallet },
-            ]}
-          />
-          {role === 'manager' && (
-            <FilterSelect
-              value={cashierFilter}
-              onChange={(v) => setCashierFilter(v)}
-              options={[
-                { value: 'all', label: t.cashierAll },
-                ...CASHIERS.map((c) => ({ value: c.en, label: c[lang] })),
-              ]}
-            />
-          )}
 
           <div className="ms-auto flex items-center gap-3">
             <span className="text-xs font-bold text-slate-400">{t.resultsCount(sorted.length)}</span>
-            {(search || dateFilter !== 'all' || statusFilter !== 'all' || paymentFilter !== 'all' || cashierFilter !== 'all') && (
+            {(search || dateFilter !== 'all' || statusFilter !== 'all') && (
               <button onClick={clearFilters} className="text-xs font-bold text-blue-600 hover:text-blue-700">
                 {isRtl ? 'إزالة الفلاتر' : 'Clear filters'}
               </button>
@@ -1777,149 +1722,173 @@ export default function Invoices() {
         </div>
       </div>
 
-      {/* ===== جدول الفواتير ===== */}
-      <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 bg-gradient-to-l from-slate-50 to-white">
-                <Th>{t.thInvoice}</Th>
-                <ThSortable label={t.thDate} active={sortKey === 'date'} dir={sortDir} onClick={() => toggleSort('date')} />
-                <Th className="hidden md:table-cell">{t.thTime}</Th>
-                <ThSortable label={t.thCustomer} active={sortKey === 'customer'} dir={sortDir} onClick={() => toggleSort('customer')} />
-                <Th className="hidden lg:table-cell">{t.thCashier}</Th>
-                <Th className="hidden md:table-cell">{t.thItems}</Th>
-                <Th className="hidden sm:table-cell">{t.thPayment}</Th>
-                <ThSortable label={t.thTotal} active={sortKey === 'total'} dir={sortDir} onClick={() => toggleSort('total')} />
-                <Th>{t.thStatus}</Th>
-                <Th className="text-end">{t.thActions}</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageItems.map((inv) => {
-                const status = statusOverrides[inv.id] ?? inv.status;
-                const total = invoiceTotal(inv);
-                return (
-                  <tr key={inv.id} className="border-b border-slate-50 last:border-0 hover:bg-blue-50/30 transition-colors group">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setSelectedInvoice(inv)}
-                          className="font-bold text-blue-600 hover:underline text-xs"
-                        >
-                          {inv.invoiceNo}
-                        </button>
-                        <button
-                          onClick={() => handleCopy(inv)}
-                          className="p-1 rounded-md text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-colors"
-                          title={t.copyDone}
-                        >
-                          {copiedId === inv.id ? (
-                            <span className="text-[10px] font-bold text-emerald-500">✓</span>
-                          ) : (
-                            <Icon.Copy className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600 text-xs whitespace-nowrap">{inv.date}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs hidden md:table-cell whitespace-nowrap">{inv.time}</td>
-                    <td className="px-4 py-3 text-slate-700 font-medium text-xs">{inv.customerName[lang]}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">{inv.cashier[lang]}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs hidden md:table-cell">
-                      {inv.items.reduce((s, it) => s + it.qty, 0)} {t.unitItem}
-                    </td>
-                    <td className="px-4 py-3 text-slate-500 text-xs hidden sm:table-cell">{paymentLabel(inv.paymentMethod)}</td>
-                    <td className="px-4 py-3 font-bold text-slate-800 text-xs whitespace-nowrap">
-                      {numberFmt(total)} <span className="text-slate-400 font-medium">{t.currency}</span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={status} t={t} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                        <RowAction title={t.actionView} onClick={() => setSelectedInvoice(inv)}>
-                          <Icon.Eye className="w-4 h-4" />
-                        </RowAction>
-                        <RowAction title={t.actionPrint} onClick={() => setToast(`${t.actionPrint} ${inv.invoiceNo} ✓`)}>
-                          <Icon.Print className="w-4 h-4" />
-                        </RowAction>
-                        <RowAction title={t.actionPdf} onClick={() => setToast(`PDF ${inv.invoiceNo} ✓`)}>
-                          <Icon.Pdf className="w-4 h-4" />
-                        </RowAction>
-                        {status !== 'returned' && status !== 'cancelled' && (
-                          <RowAction title={t.actionReturn} onClick={() => handleReturn(inv)}>
-                            <Icon.Return className="w-4 h-4" />
-                          </RowAction>
-                        )}
-                        {role === 'manager' && status !== 'cancelled' && (
-                          <RowAction title={t.actionCancel} danger onClick={() => handleCancel(inv)}>
-                            <Icon.Ban className="w-4 h-4" />
-                          </RowAction>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      {/* ===== حالة الخطأ ===== */}
+      {error && !loading && (
+        <div className="bg-white border border-rose-100 rounded-2xl p-8 flex flex-col items-center text-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-400">
+            <Icon.Alert className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-bold text-slate-700">{error}</p>
+          <button
+            onClick={loadInvoices}
+            className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 transition-colors"
+          >
+            {t.retry}
+          </button>
         </div>
+      )}
 
-        {pageItems.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 mb-3">
-              <Icon.Empty className="w-7 h-7" />
-            </div>
-            <p className="text-sm font-bold text-slate-600">{t.emptyTitle}</p>
-            <p className="text-xs text-slate-400 mt-1">{t.emptySubtitle}</p>
-          </div>
-        )}
+      {/* ===== حالة التحميل ===== */}
+      {loading && (
+        <div className="bg-white border border-slate-100 rounded-2xl p-16 flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-bold text-slate-400">{t.loadingTitle}</p>
+        </div>
+      )}
 
-        {/* ===== Pagination ===== */}
-        {pageItems.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
-            >
-              {t.pagePrev}
-            </button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-all duration-200 ${
-                    currentPage === i + 1 ? 'bg-gradient-to-br from-blue-600 to-indigo-800 text-white shadow-sm shadow-blue-900/30' : 'text-slate-500 hover:bg-slate-50'
-                  }`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
-            >
-              {t.pageNext}
-            </button>
+      {/* ===== جدول الفواتير ===== */}
+      {!loading && !error && (
+        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-gradient-to-l from-slate-50 to-white">
+                  <Th>{t.thInvoice}</Th>
+                  <ThSortable label={t.thDate} active={sortKey === 'date'} dir={sortDir} onClick={() => toggleSort('date')} />
+                  <Th className="hidden md:table-cell">{t.thTime}</Th>
+                  <ThSortable label={t.thCustomer} active={sortKey === 'customer'} dir={sortDir} onClick={() => toggleSort('customer')} />
+                  <Th className="hidden lg:table-cell">{t.thUser}</Th>
+                  <Th className="hidden md:table-cell">{t.thItems}</Th>
+                  <ThSortable label={t.thTotal} active={sortKey === 'total'} dir={sortDir} onClick={() => toggleSort('total')} />
+                  <Th>{t.thStatus}</Th>
+                  <Th className="text-end">{t.thActions}</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageItems.map((inv) => {
+                  const isUpdating = updatingId === inv.id;
+                  return (
+                    <tr key={inv.id} className="border-b border-slate-50 last:border-0 hover:bg-blue-50/30 transition-colors group">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <button onClick={() => handleOpenInvoice(inv.id)} className="font-bold text-blue-600 hover:underline text-xs">
+                            {inv.invoiceNumber}
+                          </button>
+                          <button
+                            onClick={() => handleCopy(inv)}
+                            className="p-1 rounded-md text-slate-300 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                            title={t.copyDone}
+                          >
+                            {copiedId === inv.id ? (
+                              <span className="text-[10px] font-bold text-emerald-500">✓</span>
+                            ) : (
+                              <Icon.Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600 text-xs whitespace-nowrap">{formatDate(inv.invoiceDate)}</td>
+                      <td className="px-4 py-3 text-slate-400 text-xs hidden md:table-cell whitespace-nowrap">{formatTime(inv.invoiceDate)}</td>
+                      <td className="px-4 py-3 text-slate-700 font-medium text-xs">{inv.customerName}</td>
+                      <td className="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">{inv.userName ?? '—'}</td>
+                      <td className="px-4 py-3 text-slate-500 text-xs hidden md:table-cell">
+                        {inv.itemsCount} {t.unitItem}
+                      </td>
+                      <td className="px-4 py-3 font-bold text-slate-800 text-xs whitespace-nowrap">
+                        {numberFmt(inv.totalAmount)} <span className="text-slate-400 font-medium">{t.currency}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={inv.status} t={t} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                          <RowAction title={t.actionView} onClick={() => handleOpenInvoice(inv.id)}>
+                            <Icon.Eye className="w-4 h-4" />
+                          </RowAction>
+                          <RowAction title={t.actionPrint} onClick={() => setToast(`${t.actionPrint} ${inv.invoiceNumber} ✓`)}>
+                            <Icon.Print className="w-4 h-4" />
+                          </RowAction>
+                          <RowAction title={t.actionPdf} onClick={() => setToast(`PDF ${inv.invoiceNumber} ✓`)}>
+                            <Icon.Pdf className="w-4 h-4" />
+                          </RowAction>
+                          {inv.status !== 'غير مدفوعة' && inv.status !== 'ملغاة' && (
+                            <RowAction title={t.actionReturn} onClick={() => handleReturn(inv)} disabled={isUpdating}>
+                              <Icon.Return className="w-4 h-4" />
+                            </RowAction>
+                          )}
+                          {inv.status !== 'ملغاة' && (
+                            <RowAction title={t.actionCancel} danger onClick={() => handleCancel(inv)} disabled={isUpdating}>
+                              <Icon.Ban className="w-4 h-4" />
+                            </RowAction>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        )}
-      </div>
+
+          {pageItems.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 mb-3">
+                <Icon.Empty className="w-7 h-7" />
+              </div>
+              <p className="text-sm font-bold text-slate-600">{t.emptyTitle}</p>
+              <p className="text-xs text-slate-400 mt-1">{t.emptySubtitle}</p>
+            </div>
+          )}
+
+          {/* ===== Pagination ===== */}
+          {pageItems.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+              >
+                {t.pagePrev}
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i + 1)}
+                    className={`w-7 h-7 rounded-lg text-xs font-bold transition-all duration-200 ${
+                      currentPage === i + 1 ? 'bg-gradient-to-br from-blue-600 to-indigo-800 text-white shadow-sm shadow-blue-900/30' : 'text-slate-500 hover:bg-slate-50'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
+              >
+                {t.pageNext}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ===== نافذة تفاصيل الفاتورة ===== */}
-      {selectedInvoice && (
+      {selectedInvoiceId !== null && (
         <InvoiceModal
-          invoice={selectedInvoice}
-          status={statusOverrides[selectedInvoice.id] ?? selectedInvoice.status}
-          onClose={() => setSelectedInvoice(null)}
+          detail={selectedInvoiceDetail}
+          fallbackNumber={selectedInvoiceListItem?.invoiceNumber}
+          loading={modalLoading}
+          onClose={() => {
+            setSelectedInvoiceId(null);
+            setSelectedInvoiceDetail(null);
+          }}
           t={t}
-          lang={lang}
           numberFmt={numberFmt}
-          paymentLabel={paymentLabel}
+          formatDate={formatDate}
+          formatTime={formatTime}
         />
       )}
 
@@ -2056,17 +2025,20 @@ function RowAction({
   title,
   onClick,
   danger,
+  disabled,
 }: {
   children: React.ReactNode;
   title: string;
   onClick: () => void;
   danger?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       title={title}
       onClick={onClick}
-      className={`p-1.5 rounded-lg transition-colors ${
+      disabled={disabled}
+      className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
         danger ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'
       }`}
     >
@@ -2079,26 +2051,25 @@ function RowAction({
    نافذة تفاصيل الفاتورة (Modal)
 ========================================================= */
 function InvoiceModal({
-  invoice,
-  status,
+  detail,
+  fallbackNumber,
+  loading,
   onClose,
   t,
-  lang,
   numberFmt,
-  paymentLabel,
+  formatDate,
+  formatTime,
 }: {
-  invoice: Invoice;
-  status: InvoiceStatus;
+  detail: InvoiceDetail | null;
+  fallbackNumber?: string;
+  loading: boolean;
   onClose: () => void;
   t: typeof translations.ar;
-  lang: 'ar' | 'en';
   numberFmt: (n: number) => string;
-  paymentLabel: (m: PaymentMethod) => string;
+  formatDate: (iso: string) => string;
+  formatTime: (iso: string) => string;
 }) {
   const overlayRef = useRef<HTMLDivElement>(null);
-  const subtotal = invoice.items.reduce((s, it) => s + it.qty * it.price, 0);
-  const tax = (subtotal - invoice.discount) * (invoice.taxRate / 100);
-  const grandTotal = subtotal - invoice.discount + tax;
 
   return (
     <div
@@ -2112,92 +2083,97 @@ function InvoiceModal({
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
           <div>
             <h2 className="text-sm font-black text-slate-800">{t.modalTitle}</h2>
-            <p className="text-xs text-slate-400 font-bold mt-0.5">{invoice.invoiceNo}</p>
+            <p className="text-xs text-slate-400 font-bold mt-0.5">{detail?.invoiceNumber ?? fallbackNumber ?? ''}</p>
           </div>
           <div className="flex items-center gap-2">
-            <StatusBadge status={status} t={t} />
+            {detail && <StatusBadge status={detail.status} t={t} />}
             <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
               <Icon.Close className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        <div className="overflow-y-auto px-5 py-4 space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <InfoField label={t.modalInvoiceNo} value={invoice.invoiceNo} />
-            <InfoField label={t.modalDate} value={`${invoice.date} - ${invoice.time}`} />
-            <InfoField label={t.modalCustomer} value={invoice.customerName[lang]} />
-            <InfoField label={t.modalCashier} value={invoice.cashier[lang]} />
+        {loading || !detail ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <div className="w-7 h-7 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs font-bold text-slate-400">{t.modalLoading}</p>
           </div>
+        ) : (
+          <>
+            <div className="overflow-y-auto px-5 py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <InfoField label={t.modalInvoiceNo} value={detail.invoiceNumber} />
+                <InfoField label={t.modalDate} value={`${formatDate(detail.invoiceDate)} - ${formatTime(detail.invoiceDate)}`} />
+                <InfoField label={t.modalCustomer} value={detail.customer?.customerName ?? '—'} />
+                <InfoField label={t.modalUser} value={detail.user?.fullName ?? '—'} />
+              </div>
 
-          <div className="border border-slate-100 rounded-xl overflow-hidden">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="px-3 py-2 text-start font-bold text-slate-400">{t.modalProduct}</th>
-                  <th className="px-3 py-2 text-center font-bold text-slate-400">{t.modalQty}</th>
-                  <th className="px-3 py-2 text-end font-bold text-slate-400">{t.modalPrice}</th>
-                  <th className="px-3 py-2 text-end font-bold text-slate-400">{t.modalLineTotal}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoice.items.map((it) => (
-                  <tr key={it.id} className="border-b border-slate-50 last:border-0">
-                    <td className="px-3 py-2 text-slate-700 font-medium">{it.name[lang]}</td>
-                    <td className="px-3 py-2 text-center text-slate-500">{it.qty}</td>
-                    <td className="px-3 py-2 text-end text-slate-500">{numberFmt(it.price)}</td>
-                    <td className="px-3 py-2 text-end font-bold text-slate-700">{numberFmt(it.qty * it.price)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              <div className="border border-slate-100 rounded-xl overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-100">
+                      <th className="px-3 py-2 text-start font-bold text-slate-400">{t.modalProduct}</th>
+                      <th className="px-3 py-2 text-center font-bold text-slate-400">{t.modalQty}</th>
+                      <th className="px-3 py-2 text-end font-bold text-slate-400">{t.modalPrice}</th>
+                      <th className="px-3 py-2 text-end font-bold text-slate-400">{t.modalLineTotal}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detail.invoiceItems.map((it) => (
+                      <tr key={it.id} className="border-b border-slate-50 last:border-0">
+                        {/* ⚠️ اسم حقل المنتج مفترض (productName) — عدّله لو الاسم الفعلي بموديل Product مختلف */}
+                        <td className="px-3 py-2 text-slate-700 font-medium">{it.product?.productName ?? '—'}</td>
+                        <td className="px-3 py-2 text-center text-slate-500">{it.quantity}</td>
+                        <td className="px-3 py-2 text-end text-slate-500">{numberFmt(it.unitPrice)}</td>
+                        <td className="px-3 py-2 text-end font-bold text-slate-700">{numberFmt(it.totalPrice)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-          <div className="space-y-1.5 text-xs">
-            <div className="flex justify-between text-slate-500">
-              <span>{t.modalSubtotal}</span>
-              <span className="font-bold text-slate-700">
-                {numberFmt(subtotal)} {t.currency}
-              </span>
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between text-slate-500">
+                  <span>{t.modalSubtotal}</span>
+                  <span className="font-bold text-slate-700">
+                    {numberFmt(detail.subTotal)} {t.currency}
+                  </span>
+                </div>
+                <div className="flex justify-between text-slate-500">
+                  <span>{t.modalDiscount}</span>
+                  <span className="font-bold text-rose-500">
+                    -{numberFmt(detail.discountAmount)} {t.currency}
+                  </span>
+                </div>
+                <div className="flex justify-between text-slate-500">
+                  <span>{t.modalTax}</span>
+                  <span className="font-bold text-slate-700">
+                    {numberFmt(detail.taxAmount)} {t.currency}
+                  </span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-slate-100 text-sm">
+                  <span className="font-black text-slate-800">{t.modalGrandTotal}</span>
+                  <span className="font-black text-blue-600">
+                    {numberFmt(detail.totalAmount)} {t.currency}
+                  </span>
+                </div>
+              </div>
             </div>
-            <div className="flex justify-between text-slate-500">
-              <span>{t.modalDiscount}</span>
-              <span className="font-bold text-rose-500">
-                -{numberFmt(invoice.discount)} {t.currency}
-              </span>
-            </div>
-            <div className="flex justify-between text-slate-500">
-              <span>{t.modalTax}</span>
-              <span className="font-bold text-slate-700">
-                {numberFmt(tax)} {t.currency}
-              </span>
-            </div>
-            <div className="flex justify-between pt-2 border-t border-slate-100 text-sm">
-              <span className="font-black text-slate-800">{t.modalGrandTotal}</span>
-              <span className="font-black text-blue-600">
-                {numberFmt(grandTotal)} {t.currency}
-              </span>
-            </div>
-          </div>
 
-          <div className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2.5">
-            <span className="text-xs font-bold text-slate-500">{t.modalPaymentMethod}</span>
-            <span className="text-xs font-black text-slate-800">{paymentLabel(invoice.paymentMethod)}</span>
-          </div>
-        </div>
-
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center gap-2.5">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 transition-colors"
-          >
-            {t.modalClose}
-          </button>
-          <button className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5">
-            <Icon.Print className="w-4 h-4" />
-            {t.actionPrint}
-          </button>
-        </div>
+            <div className="px-5 py-4 border-t border-slate-100 flex items-center gap-2.5">
+              <button
+                onClick={onClose}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 transition-colors"
+              >
+                {t.modalClose}
+              </button>
+              <button className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5">
+                <Icon.Print className="w-4 h-4" />
+                {t.actionPrint}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

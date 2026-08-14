@@ -77,6 +77,16 @@ export default function Header({
     navRef.current.scrollLeft = scrollLeft.current - walk;
   };
 
+  const handleScrollClick = (direction: 'prev' | 'next') => {
+    if (navRef.current) {
+      const scrollAmount = 240;
+      navRef.current.scrollBy({
+        left: direction === 'prev' ? scrollAmount : -scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
   const handleLogoutClick = () => {
     if (onLogout) {
       onLogout();
@@ -238,19 +248,45 @@ export default function Header({
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.6); }
       `}</style>
 
-      <header className="w-full bg-[#0a1931] text-white shadow-md z-30 px-4 flex-shrink-0 select-none relative">
-        <div className="flex items-center justify-between w-full gap-4 px-2 py-3">
+      <header className="w-full bg-[#0a1931] text-white shadow-md z-30 px-3 sm:px-4 flex-shrink-0 select-none relative">
+        <div className="flex flex-col gap-3 px-1 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-2">
           {/* Logo */}
           <div
             onClick={() => navigate('/')}
-            className="flex items-center gap-3 flex-shrink-0 cursor-pointer"
+            className="flex items-center justify-between gap-3 flex-shrink-0 cursor-pointer w-full sm:w-auto"
           >
             <PoswaveLogo iconSize={48} />
+            <div className="flex items-center gap-2 sm:hidden">
+              {showLogout && (
+                <LogoutButton
+                  variant="header"
+                  isRtl={isRtl}
+                  onClick={handleLogoutClick}
+                />
+              )}
+              {onToggleRtl && (
+                <button
+                  onClick={onToggleRtl}
+                  className="lang-btn text-[11px] font-bold bg-white/10 px-2.5 py-1.5 rounded-lg min-w-[65px] text-center"
+                >
+                  {t.lang}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Navigation */}
           {menuItems.length > 0 && (
-            <div className="flex items-center gap-1 flex-1 min-w-0 max-w-full md:max-w-[65%] relative px-2 sm:px-6">
+            <div className="order-3 flex items-center gap-1 w-full min-w-0 max-w-full sm:order-none sm:flex-1 sm:max-w-[65%] relative px-0 sm:px-6">
+              <button
+                onClick={() => handleScrollClick('prev')}
+                className="scroll-btn hidden sm:inline-flex p-1 rounded-full bg-white/5 text-white focus:outline-none"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={isRtl ? 'M9 5l7 7-7 7' : 'M15 19l-7-7 7-7'} />
+                </svg>
+              </button>
+
               <div
                 ref={navRef}
                 onMouseDown={handleMouseDown}
@@ -271,11 +307,20 @@ export default function Header({
                   </button>
                 ))}
               </div>
+
+              <button
+                onClick={() => handleScrollClick('next')}
+                className="scroll-btn hidden sm:inline-flex p-1 rounded-full bg-white/5 text-white focus:outline-none"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d={isRtl ? 'M15 19l-7-7 7-7' : 'M9 5l7 7-7 7'} />
+                </svg>
+              </button>
             </div>
           )}
 
           {/* Right side: Logout + Language + User */}
-          <div className="flex items-center gap-4 flex-shrink-0">
+          <div className="hidden sm:flex items-center gap-4 flex-shrink-0">
             {showLogout && (
               <LogoutButton
                 variant="header"
@@ -308,15 +353,15 @@ export default function Header({
 
       {/* Sub-header with title, filters, and user card */}
       {(title || showFilters || showNotifications || showUserCard) && (
-        <div className="w-full bg-white border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0">
+        <div className="w-full bg-white border-b border-slate-100 px-4 sm:px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 flex-shrink-0">
           <div>
-            {title && <h1 className="text-xl font-black text-slate-800 tracking-tight">{title}</h1>}
+            {title && <h1 className="text-lg sm:text-xl font-black text-slate-800 tracking-tight">{title}</h1>}
             {subtitle && <p className="text-xs text-slate-400 font-medium mt-0.5">{subtitle}</p>}
           </div>
 
-          <div className="flex items-center gap-4 self-end sm:self-auto">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 self-stretch sm:self-auto">
             {showFilters && activeFilter && onFilterChange && (
-              <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-0.5">
+              <div className="bg-slate-100 p-1 rounded-xl flex items-center gap-0.5 w-full sm:w-auto justify-between sm:justify-start">
                 {(['day', 'week', 'month'] as TimeFilter[]).map((filter) => (
                   <button
                     key={filter}
@@ -332,7 +377,7 @@ export default function Header({
             {showNotifications && <NotificationBell isRtl={isRtl} />}
 
             {showUserCard && (
-              <div className="user-card flex items-center gap-2.5 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl">
+              <div className="user-card flex items-center gap-2.5 bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl w-full sm:w-auto">
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center font-bold text-white text-xs shadow-sm shadow-blue-600/20">
                   {avatarChar}
                 </div>

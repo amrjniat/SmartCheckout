@@ -49,7 +49,7 @@ const defaultMenuItems: MenuItem[] = [
   const menuItems = pageData.menuItems || defaultMenuItems;
 
   return (
-    <div className="flex flex-col w-full h-screen overflow-hidden bg-slate-50 font-sans relative" dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className="flex min-h-dvh flex-col w-full overflow-x-hidden bg-slate-50 font-sans relative" dir={isRtl ? 'rtl' : 'ltr'}>
       {/* ✅ يُعرض الشريط افتراضياً، ويُخفى فقط إذا طلبت الصفحة ذلك عبر setPageData({ showHeader: false }) */}
       {headerData.showHeader !== false && (
         <Header
@@ -72,7 +72,7 @@ const defaultMenuItems: MenuItem[] = [
       )}
 
       {/* عرض محتوى صفحات المستودع الفرعية هنا */}
-      <div className="flex-1 overflow-y-auto bg-slate-50/50">
+      <div className="flex-1 min-h-0 overflow-y-auto bg-slate-50/50">
         <Outlet context={{ isRtl, setIsRtl, setPageData }} />
       </div>
     </div>

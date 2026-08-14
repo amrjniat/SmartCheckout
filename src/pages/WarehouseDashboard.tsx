@@ -1,7 +1,4 @@
-
-
-
-import connection, { startSignalRConnection } from '../services/signalRService';
+import connection, { startSignalRConnection, onAnyDataChange } from '../services/signalRService';
 import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { getProducts } from '../services/productService';
@@ -58,25 +55,14 @@ export default function WarehouseDashboard() {
   }, [fetchDashboardData]);
 
   // الاستماع لتحديثات SignalR
-  useEffect(() => {
-    // 1. التأكد من بدء الاتصال
-    startSignalRConnection();
-
-    // 2. الاستماع لتحديثات المخزون أو عمليات البيع التي تؤثر على الكميات
-    connection.on("InventoryUpdated", () => {
-        console.log("تم تغيير المخزون! جاري تحديث بيانات المستودع...");
+  useEffect(() => {    // 1. التأكد من بدء الاتصال
+    startSignalRConnection();    // 2. الاستماع لأي تغيير بيانات يؤثر على المستودع (مخزون / بيع / فاتورة جديدة)
+    const unsubscribe = onAnyDataChange(() => {
+        console.log("تغيّرت بيانات المخزون أو المبيعات! جاري تحديث بيانات المستودع...");
         fetchDashboardData();
-    });
-
-    connection.on("ReceiveNewSale", () => {
-        console.log("تمت عملية بيع جديدة! جاري تحديث كميات المستودع...");
-        fetchDashboardData();
-    });
-
-    // 3. تنظيف الاستماع عند مغادرة الصفحة
+    });    // 3. تنظيف الاستماع عند مغادرة الصفحة
     return () => {
-        connection.off("InventoryUpdated");
-        connection.off("ReceiveNewSale");
+        unsubscribe();
     };
   }, [fetchDashboardData]);
 

@@ -72,12 +72,12 @@ function Sidebar() {
 
   return (
     /* التحديث الجوهري هنا: أضفنا فئات التثبيت الصارم ومنع الانكماش عند أطراف الشاشة */
-    <div className="w-80 h-screen bg-[#070F26] text-slate-300 flex flex-col justify-between border-l border-slate-800/50 select-none sticky top-0 flex-shrink-0">
+    <div className="w-full lg:w-80 min-h-dvh lg:h-screen bg-[#070F26] text-slate-300 flex flex-col justify-between border-l border-slate-800/50 select-none sticky top-0 flex-shrink-0">
       
  
 {/* قسم الشعار - موحّد مع باقي النظام */}
-<div className="p-5 flex-shrink-0 border-b border-slate-800/60">
-  <PoswaveLogo layout="vertical" iconSize={80} />
+<div className="p-4 sm:p-5 flex-shrink-0 border-b border-slate-800/60">
+  <PoswaveLogo layout="vertical" iconSize={64} />
 </div>
 
 
