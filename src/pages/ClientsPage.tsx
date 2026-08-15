@@ -1,35 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { 
   Users, UserPlus, Activity, DollarSign, Search, Plus, 
   Download, Filter, ShoppingCart, 
-  Eye, Edit, X, Phone, Mail, MapPin
+  Eye, Edit, X, Phone, Mail, Loader2, AlertTriangle
 } from 'lucide-react';
-
+import {
+  fetchCustomers,
+  fetchCustomerStats,
+  createCustomer,
+} from '../services/customerService';
+import type { Customer, CustomerStats } from '../services/customerService';
 type LayoutContext = { isRtl: boolean; setIsRtl: (value: boolean) => void };
-
-// ================= Types =================
-interface Customer {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
-  invoicesCount: number;
-  totalPurchases: number;
-  balance: number;
-  lastPurchase: string;
-  status: 'Active' | 'New' | 'Inactive';
-  type: 'Regular' | 'VIP' | 'Company';
-  city: string;
-}
-
-// ================= Dynamic Mock Data =================
-const getMockCustomers = (lang: 'ar' | 'en'): Customer[] => [
-  { id: 'CUST-001', name: lang === 'ar' ? 'أحمد علي' : 'Ahmad Ali', phone: '0991234567', email: 'ahmad@example.com', invoicesCount: 18, totalPurchases: 4250000, balance: 0, lastPurchase: '2026-07-16', status: 'Active', type: 'Regular', city: lang === 'ar' ? 'الرياض' : 'Riyadh' },
-  { id: 'CUST-002', name: lang === 'ar' ? 'شركة الأفق' : 'Horizon Co.', phone: '0559876543', email: 'info@horizon.com', invoicesCount: 45, totalPurchases: 12500000, balance: 150000, lastPurchase: '2026-07-18', status: 'Active', type: 'Company', city: lang === 'ar' ? 'جدة' : 'Jeddah' },
-  { id: 'CUST-003', name: lang === 'ar' ? 'سارة خالد' : 'Sara Khalid', phone: '0501122334', email: 'sara@example.com', invoicesCount: 2, totalPurchases: 350000, balance: 0, lastPurchase: '2026-07-17', status: 'New', type: 'VIP', city: lang === 'ar' ? 'الدمام' : 'Dammam' },
-  { id: 'CUST-004', name: lang === 'ar' ? 'محمود حسن' : 'Mahmoud Hassan', phone: '0544455666', email: 'mahmoud@example.com', invoicesCount: 0, totalPurchases: 0, balance: 0, lastPurchase: 'N/A', status: 'Inactive', type: 'Regular', city: lang === 'ar' ? 'مكة' : 'Mecca' },
-];
 
 // ================= Translations =================
 const translations = {
@@ -57,13 +40,20 @@ const translations = {
     phone: 'رقم الهاتف',
     email: 'البريد الإلكتروني',
     save: 'حفظ العميل',
+    saving: 'جارٍ الحفظ...',
     cancel: 'إلغاء',
     active: 'نشط',
     new: 'جديد',
     inactive: 'غير نشط',
+    debtor: 'مدين',
     vip: 'مميز',
     company: 'شركة',
     regular: 'عادي',
+    loading: 'جارٍ تحميل بيانات العملاء...',
+    errorLoad: 'حدث خطأ أثناء تحميل العملاء. حاول مرة أخرى.',
+    retry: 'إعادة المحاولة',
+    noResults: 'لا يوجد عملاء مطابقين',
+    errorAdd: 'حدث خطأ أثناء إضافة العميل',
   },
   en: {
     title: 'Customers Management',
@@ -89,13 +79,20 @@ const translations = {
     phone: 'Phone Number',
     email: 'Email Address',
     save: 'Save Customer',
+    saving: 'Saving...',
     cancel: 'Cancel',
     active: 'Active',
     new: 'New',
     inactive: 'Inactive',
+    debtor: 'Debtor',
     vip: 'VIP',
     company: 'Company',
     regular: 'Regular',
+    loading: 'Loading customers...',
+    errorLoad: 'Failed to load customers. Please try again.',
+    retry: 'Retry',
+    noResults: 'No matching customers found',
+    errorAdd: 'Failed to add customer',
   }
 };
 
@@ -106,14 +103,63 @@ export default function CustomersPage() {
   const t = translations[lang];
   const isRTL = isRtl;
 
-  const [customers, setCustomers] = useState<Customer[]>(getMockCustomers(lang));
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [stats, setStats] = useState<CustomerStats | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newCustomerForm, setNewCustomerForm] = useState({ name: '', phone: '', email: '' });
 
-  useEffect(() => { setCustomers(getMockCustomers(lang)); }, [lang]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+
+  // ================= جلب العملاء من الباك إند =================
+  const loadCustomers = useCallback(async (search: string) => {
+    setIsLoading(true);
+    setLoadError(false);
+    try {
+      const { customers: data } = await fetchCustomers({ search: search || undefined, pageSize: 50 });
+      setCustomers(data);
+    } catch (err) {
+      console.error('❌ فشل تحميل العملاء:', err);
+      setLoadError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // ================= جلب الإحصائيات =================
+  const loadStats = useCallback(async () => {
+    try {
+      const data = await fetchCustomerStats();
+      setStats(data);
+    } catch (err) {
+      console.error('❌ فشل تحميل إحصائيات العملاء:', err);
+      // لا نوقف الصفحة بسبب فشل الإحصائيات فقط، نسيبها فاضية (0)
+    }
+  }, []);
+
+  // تحميل أولي
+  useEffect(() => {
+    loadCustomers('');
+    loadStats();
+  }, [loadCustomers, loadStats]);
+
+  // ================= Debounce للبحث (300ms) =================
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      loadCustomers(searchTerm);
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -124,28 +170,30 @@ export default function CustomersPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const filteredCustomers = useMemo(() => {
-    return customers.filter(c => 
-      c.name.includes(searchTerm) || 
-      c.phone.includes(searchTerm) || 
-      c.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm, customers]);
-
-  const handleAddCustomer = (e: React.FormEvent) => {
+  // ================= إضافة عميل =================
+  const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCustomerForm.name) return;
-    const newCustomer: Customer = {
-      id: `CUST-00${customers.length + 1}`,
-      name: newCustomerForm.name,
-      phone: newCustomerForm.phone,
-      email: newCustomerForm.email,
-      invoicesCount: 0, totalPurchases: 0, balance: 0,
-      lastPurchase: 'N/A', status: 'New', type: 'Regular', city: 'N/A'
-    };
-    setCustomers([newCustomer, ...customers]);
-    setIsAddModalOpen(false);
-    setNewCustomerForm({ name: '', phone: '', email: '' });
+
+    setIsSaving(true);
+    setAddError(null);
+    try {
+      await createCustomer({
+        customerName: newCustomerForm.name,
+        mobile: newCustomerForm.phone || undefined,
+        email: newCustomerForm.email || undefined,
+      });
+      setIsAddModalOpen(false);
+      setNewCustomerForm({ name: '', phone: '', email: '' });
+      // إعادة تحميل القائمة والإحصائيات عشان العميل الجديد يظهر فورًا
+      await loadCustomers(searchTerm);
+      await loadStats();
+    } catch (err: any) {
+      console.error('❌ فشل إضافة العميل:', err);
+      setAddError(err?.response?.data?.message || t.errorAdd);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getAvatarGradient = (type: string) => {
@@ -166,29 +214,29 @@ export default function CustomersPage() {
         <p className="text-slate-500">{t.subtitle}</p>
       </div>
 
-      {/* Stat Cards - DISTINCT COLORS, SQUARE */}
+      {/* Stat Cards */}
       <div className="grid w-full grid-cols-2 md:grid-cols-4 gap-3 mb-8">
         <StatCard 
           title={t.totalCustomers} 
-          value={customers.length.toString()} 
+          value={(stats?.totalCustomers ?? 0).toString()} 
           icon={<Users size={17} />} 
           theme="blue"
         />
         <StatCard 
           title={t.newCustomers} 
-          value="45" 
+          value={(stats?.newCustomers ?? 0).toString()} 
           icon={<UserPlus size={17} />} 
           theme="amber"
         />
         <StatCard 
           title={t.activeCustomers} 
-          value="880" 
+          value={(stats?.activeCustomers ?? 0).toString()} 
           icon={<Activity size={17} />} 
           theme="emerald"
         />
         <StatCard 
           title={t.totalSales} 
-          value="12,450,000" 
+          value={(stats?.totalSales ?? 0).toLocaleString()} 
           currency={t.currency} 
           icon={<DollarSign size={17} />} 
           theme="indigo"
@@ -225,75 +273,99 @@ export default function CustomersPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table / Loading / Error */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-start whitespace-nowrap">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm">
-              <tr>
-                <th className="p-4 font-semibold">{t.tableCustomer}</th>
-                <th className="p-4 font-semibold">{t.tableContact}</th>
-                <th className="p-4 font-semibold">{t.tablePurchases}</th>
-                <th className="p-4 font-semibold">{t.tableBalance}</th>
-                <th className="p-4 font-semibold">{t.tableStatus}</th>
-                <th className="p-4 font-semibold text-center">{t.tableActions}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCustomers.map((customer) => (
-                <tr 
-                  key={customer.id} 
-                  className="border-b border-slate-100 hover:bg-slate-50 transition-colors group cursor-pointer"
-                  onClick={() => { setSelectedCustomer(customer); setIsSidePanelOpen(true); }}
-                >
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient(customer.type)} flex items-center justify-center font-bold text-white shadow-sm`}>
-                        {customer.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-800 flex items-center gap-2">
-                          {customer.name}
-                          {customer.type === 'VIP' && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">{t.vip}</span>}
-                          {customer.type === 'Company' && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">{t.company}</span>}
-                          {customer.type === 'Regular' && <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">{t.regular}</span>}
-                        </div>
-                        <div className="text-xs text-slate-500">{customer.id}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-sm font-medium text-slate-700">{customer.phone}</div>
-                    <div className="text-xs text-slate-500">{customer.city}</div>
-                  </td>
-                  <td className="p-4">
-                    <div className="text-sm font-bold text-slate-800">{customer.totalPurchases.toLocaleString()} {t.currency}</div>
-                    <div className="text-xs text-slate-500">{customer.invoicesCount} {t.invoices}</div>
-                  </td>
-                  <td className="p-4">
-                    {customer.balance > 0 ? (
-                      <span className="text-sm font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
-                        {customer.balance.toLocaleString()} {t.currency}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-slate-400 font-medium">0 {t.currency}</span>
-                    )}
-                  </td>
-                  <td className="p-4">
-                    <StatusBadge status={customer.status} t={t} />
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                      <button className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"><ShoppingCart size={18} /></button>
-                      <button className="p-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"><Eye size={18} /></button>
-                      <button className="p-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"><Edit size={18} /></button>
-                    </div>
-                  </td>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-3">
+            <Loader2 className="animate-spin" size={32} />
+            <span className="font-medium">{t.loading}</span>
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-3">
+            <AlertTriangle className="text-rose-500" size={32} />
+            <span className="font-medium">{t.errorLoad}</span>
+            <button
+              onClick={() => loadCustomers(searchTerm)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              {t.retry}
+            </button>
+          </div>
+        ) : customers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-2">
+            <Users size={32} />
+            <span className="font-medium">{t.noResults}</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-start whitespace-nowrap">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm">
+                <tr>
+                  <th className="p-4 font-semibold">{t.tableCustomer}</th>
+                  <th className="p-4 font-semibold">{t.tableContact}</th>
+                  <th className="p-4 font-semibold">{t.tablePurchases}</th>
+                  <th className="p-4 font-semibold">{t.tableBalance}</th>
+                  <th className="p-4 font-semibold">{t.tableStatus}</th>
+                  <th className="p-4 font-semibold text-center">{t.tableActions}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {customers.map((customer) => (
+                  <tr 
+                    key={customer.id} 
+                    className="border-b border-slate-100 hover:bg-slate-50 transition-colors group cursor-pointer"
+                    onClick={() => { setSelectedCustomer(customer); setIsSidePanelOpen(true); }}
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarGradient(customer.type)} flex items-center justify-center font-bold text-white shadow-sm`}>
+                          {customer.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-800 flex items-center gap-2 flex-wrap">
+                            {customer.name}
+                            {customer.type === 'VIP' && <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">{t.vip}</span>}
+                            {customer.type === 'Company' && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-bold">{t.company}</span>}
+                            {customer.type === 'Regular' && <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold">{t.regular}</span>}
+                            {customer.isDebtor && <span className="text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-bold">{t.debtor}</span>}
+                          </div>
+                          <div className="text-xs text-slate-500">{customer.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-sm font-medium text-slate-700" dir="ltr">{customer.phone || '—'}</div>
+                      <div className="text-xs text-slate-500">{customer.email || '—'}</div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-sm font-bold text-slate-800">{customer.totalPurchases.toLocaleString()} {t.currency}</div>
+                      <div className="text-xs text-slate-500">{customer.invoicesCount} {t.invoices}</div>
+                    </td>
+                    <td className="p-4">
+                      {customer.balance > 0 ? (
+                        <span className="text-sm font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
+                          {customer.balance.toLocaleString()} {t.currency}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-slate-400 font-medium">0 {t.currency}</span>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      <StatusBadge status={customer.status} t={t} />
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                        <button className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"><ShoppingCart size={18} /></button>
+                        <button className="p-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"><Eye size={18} /></button>
+                        <button className="p-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"><Edit size={18} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Add Customer Modal */}
@@ -307,6 +379,11 @@ export default function CustomersPage() {
               </button>
             </div>
             <form onSubmit={handleAddCustomer} className="p-6 space-y-5">
+              {addError && (
+                <div className="text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-lg p-3">
+                  {addError}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">{t.name}</label>
                 <input type="text" required className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
@@ -314,7 +391,7 @@ export default function CustomersPage() {
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1.5">{t.phone}</label>
-                <input type="tel" required className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                <input type="tel" className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
                   value={newCustomerForm.phone} onChange={e => setNewCustomerForm({...newCustomerForm, phone: e.target.value})} />
               </div>
               <div>
@@ -323,7 +400,10 @@ export default function CustomersPage() {
                   value={newCustomerForm.email} onChange={e => setNewCustomerForm({...newCustomerForm, email: e.target.value})} />
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 transition-all">{t.save}</button>
+                <button type="submit" disabled={isSaving} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl shadow-md hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 transition-all flex items-center justify-center gap-2">
+                  {isSaving && <Loader2 className="animate-spin" size={18} />}
+                  {isSaving ? t.saving : t.save}
+                </button>
                 <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition-all">{t.cancel}</button>
               </div>
             </form>
@@ -345,16 +425,20 @@ export default function CustomersPage() {
                    {selectedCustomer.name.charAt(0)}
                 </div>
                 <h2 className="text-2xl font-bold mb-2">{selectedCustomer.name}</h2>
-                <StatusBadge status={selectedCustomer.status} t={t} />
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={selectedCustomer.status} t={t} />
+                  {selectedCustomer.isDebtor && (
+                    <span className="bg-rose-500/10 text-rose-300 border border-rose-500/20 px-3 py-1 rounded-full text-xs font-bold w-fit">{t.debtor}</span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="p-8">
               <div className="mb-6 bg-slate-50 p-5 rounded-xl border border-slate-100">
                 <h3 className="text-sm font-bold text-slate-800 mb-4 border-b pb-3">{t.tableContact}</h3>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-4 text-slate-700 font-medium"><Phone size={18} className="text-blue-500"/> <span dir="ltr">{selectedCustomer.phone}</span></div>
-                  <div className="flex items-center gap-4 text-slate-700 font-medium"><Mail size={18} className="text-blue-500"/> {selectedCustomer.email}</div>
-                  <div className="flex items-center gap-4 text-slate-700 font-medium"><MapPin size={18} className="text-blue-500"/> {selectedCustomer.city}</div>
+                  <div className="flex items-center gap-4 text-slate-700 font-medium"><Phone size={18} className="text-blue-500"/> <span dir="ltr">{selectedCustomer.phone || '—'}</span></div>
+                  <div className="flex items-center gap-4 text-slate-700 font-medium"><Mail size={18} className="text-blue-500"/> {selectedCustomer.email || '—'}</div>
                 </div>
               </div>
             </div>
@@ -367,7 +451,6 @@ export default function CustomersPage() {
 
 // ================= Sub Components =================
 
-// DISTINCT GRADIENT Square Stat Cards (hover-lift style matching Dashboard.tsx's HoverCard)
 const StatCard = ({ title, value, icon, currency = '', theme }: any) => {
   const [isHovered, setIsHovered] = useState(false);
 
