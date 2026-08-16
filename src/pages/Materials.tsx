@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import AddProductModal from '../components/AddProductModal'; // عدّلوا المسار حسب مكان الملف الفعلي عندكم
-import { deleteProduct } from '../services/productService'; // عدّلوا المسار حسب مكان الملف الفعلي عندكم
 import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
 
 interface DashboardContext {

@@ -347,7 +347,7 @@
 
 
 import { useState, useEffect } from 'react';
-import connection, { onAnyDataChange } from '../services/signalRService';
+import { onAnyDataChange } from '../services/signalRService';
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import { getTodayInvoicesForBranch } from '../services/invoiceService';
 import type { InvoiceSummary } from '../services/invoiceService';

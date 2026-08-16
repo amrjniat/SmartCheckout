@@ -1,6 +1,5 @@
 import axiosInstance from './axiosInstance';
 import type {
-  Employee,
   EmployeeDetail,
   EmployeeStats,
   EmployeesListResponse,

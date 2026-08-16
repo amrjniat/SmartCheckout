@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { getProducts, deleteProduct } from '../services/productService';
 import axiosInstance from '../services/axiosInstance';
-import connection, { startSignalRConnection } from '../services/signalRService';
+import { startSignalRConnection } from '../services/signalRService';
 
 interface Category {
   id: string;
@@ -56,24 +56,6 @@ const CATEGORIES: Category[] = [
   { id: 'dairy', ar: 'ألبان', en: 'Dairy', icon: '🥛' },
   { id: 'cleaning', ar: 'منظفات', en: 'Cleaning', icon: '🧴' },
   { id: 'bakery', ar: 'مخبوزات', en: 'Bakery', icon: '🍞' },
-];
-
-const INITIAL_PRODUCTS: Product[] = [
-  { id: 'p1', ar: 'عصير برتقال', en: 'Orange Juice', price: 4500, stock: 40, categoryId: 'drinks', icon: '🧃', barcode: '10001', code: 'DR-01' },
-  { id: 'p2', ar: 'ماء معدني', en: 'Mineral Water', price: 1000, stock: 3, categoryId: 'drinks', icon: '💧', barcode: '10002', code: 'DR-02' },
-  { id: 'p3', ar: 'مشروب غازي', en: 'Soda', price: 2500, stock: 0, categoryId: 'drinks', icon: '🥤', barcode: '10003', code: 'DR-03' },
-  { id: 'p4', ar: 'قهوة باردة', en: 'Iced Coffee', price: 6000, stock: 18, categoryId: 'drinks', icon: '🧋', isNew: true, barcode: '10004', code: 'DR-04' },
-  { id: 'p5', ar: 'شوكولا فاخرة', en: 'Premium Chocolate', price: 8000, stock: 25, categoryId: 'sweets', icon: '🍫', barcode: '20001', code: 'SW-01' },
-  { id: 'p6', ar: 'بسكويت', en: 'Biscuits', price: 1500, stock: 4, categoryId: 'sweets', icon: '🍪', barcode: '20002', code: 'SW-02' },
-  { id: 'p7', ar: 'حلوى جيلي', en: 'Jelly Candy', price: 2000, stock: 60, categoryId: 'sweets', icon: '🍬', barcode: '20003', code: 'SW-03' },
-  { id: 'p8', ar: 'حليب طازج', en: 'Fresh Milk', price: 3000, stock: 30, categoryId: 'dairy', icon: '🥛', barcode: '30001', code: 'DA-01' },
-  { id: 'p9', ar: 'جبنة بيضاء', en: 'White Cheese', price: 9500, stock: 2, categoryId: 'dairy', icon: '🧀', barcode: '30002', code: 'DA-02' },
-  { id: 'p10', ar: 'زبادي', en: 'Yogurt', price: 2200, stock: 45, categoryId: 'dairy', icon: '🥣', isNew: true, barcode: '30003', code: 'DA-03' },
-  { id: 'p11', ar: 'سائل جلي', en: 'Dish Soap', price: 5000, stock: 22, categoryId: 'cleaning', icon: '🧴', barcode: '40001', code: 'CL-01' },
-  { id: 'p12', ar: 'مسحوق غسيل', en: 'Detergent', price: 12000, stock: 0, categoryId: 'cleaning', icon: '🧺', barcode: '40002', code: 'CL-02' },
-  { id: 'p13', ar: 'خبز عربي', en: 'Arabic Bread', price: 1000, stock: 100, categoryId: 'bakery', icon: '🍞', barcode: '50001', code: 'BK-01' },
-  { id: 'p14', ar: 'كرواسان', en: 'Croissant', price: 3500, stock: 5, categoryId: 'bakery', icon: '🥐', barcode: '50002', code: 'BK-02' },
-  { id: 'p15', ar: 'كيك محلى', en: 'Sweet Cake', price: 15000, stock: 8, categoryId: 'bakery', icon: '🍰', isNew: true, barcode: '50003', code: 'BK-03' },
 ];
 
 const TAX_RATE = 0.05;
@@ -331,23 +313,8 @@ export default function QuickSaleScreen() {
   }, [fetchProducts]);
 
   useEffect(() => {
-    // 1. التأكد من الاتصال
     startSignalRConnection();
-
-    // 2. الدالة التي سيتم تنفيذها عند وصول تحديث
-    const handleDataChange = () => {
-        console.log("تغيّرت بيانات المخزون أو الفواتير! جاري تحديث قائمة المنتجات للكاشير...");
-        fetchProducts();
-    };
-
-    // 3. الاستماع للحدث (استبدل "InventoryUpdated" باسم الحدث الصحيح من الباك إند)
-    connection.on("InventoryUpdated", handleDataChange);
-
-    // 4. تنظيف الاستماع عند إغلاق الشاشة
-    return () => {
-        connection.off("InventoryUpdated", handleDataChange);
-    };
-  }, [fetchProducts]);
+  }, []);
 
   useEffect(() => {
     const id = setTimeout(() => setIsLoading(false), 650);

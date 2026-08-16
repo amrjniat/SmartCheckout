@@ -516,7 +516,7 @@ const LOGO_URL =
  * ========================================================================== */
 
 export function Navbar() {
-  const { t, lang, setLang, dir } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
   const [scrolled, setScrolled] = useState<boolean>(false);
   const [mobileOpen, setMobileOpen] = useState<boolean>(false);
 

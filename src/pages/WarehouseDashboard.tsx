@@ -1,4 +1,4 @@
-import connection, { startSignalRConnection, onAnyDataChange } from '../services/signalRService';
+import { startSignalRConnection, onAnyDataChange } from '../services/signalRService';
 import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { getProducts } from '../services/productService';

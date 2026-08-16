@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
-import connection, { startSignalRConnection, onAnyDataChange } from '../services/signalRService';
+import { startSignalRConnection, onAnyDataChange } from '../services/signalRService';
 
 type LayoutContext = { isRtl: boolean; setIsRtl: (value: boolean) => void };
 type TimeFilter = 'day' | 'week' | 'month';
@@ -169,7 +169,7 @@ const ProductRow = ({
 );
 
 export default function Dashboard() {
-  const [activeFilter, setActiveFilter] = useState<TimeFilter>('day');
+  const [activeFilter] = useState<TimeFilter>('day');
   const { isRtl } = useOutletContext<LayoutContext>();
 
   const t = translations[isRtl ? 'ar' : 'en'];
@@ -181,14 +181,9 @@ export default function Dashboard() {
     topProducts: [],
     transactions: []
   });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // 1. تغليف الدالة بـ useCallback لمنع إعادة إنشائها مع كل رندر
   const fetchDashboardData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
     try {
       const backendPeriod = mapPeriodToBackend(activeFilter);
 
@@ -239,9 +234,6 @@ export default function Dashboard() {
 
     } catch (err: any) {
       console.error('Dashboard fetch error:', err);
-      setError('فشل تحميل بيانات لوحة التحكم');
-    } finally {
-      setIsLoading(false);
     }
   }, [activeFilter, isRtl]); 
 

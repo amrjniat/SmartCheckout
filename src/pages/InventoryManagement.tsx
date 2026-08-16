@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useOutletContext, useLocation } from 'react-router-dom';
 import { 
   Search, Filter, Package, ArrowDownToLine, ArrowUpFromLine, 
-  AlertTriangle, XCircle, Eye, Plus, Minus, Edit, History, 
+  AlertTriangle, XCircle, Plus, Minus, Edit, History, 
   X, CheckCircle, BarChart3
 } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
@@ -342,7 +342,6 @@ export default function InventoryManagement() {
         item.sku.toLowerCase().includes(q) ||
         item.category.ar.toLowerCase().includes(q) ||
         item.category.en.toLowerCase().includes(q);
-      const status = getStatus(item.currentQty, item.minQty);
       const matchStatus = filterStatus === 'all' || 
                           (filterStatus === 'out' && item.currentQty === 0) ||
                           (filterStatus === 'low' && item.currentQty > 0 && item.currentQty <= item.minQty) ||
