@@ -38,7 +38,7 @@ import GeneralSettings from './pages/GeneralSettings';
 // استيراد صفحة الإشعارات
 import NotificationsPage from './pages/Notifications';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import { Toaster } from 'react-hot-toast'; 
 function App() {
   useEffect(() => {
 const token = sessionStorage.getItem('token'); // ✅ تصحيح: كان localStorage
@@ -48,6 +48,7 @@ const token = sessionStorage.getItem('token'); // ✅ تصحيح: كان localSt
   }, []);
   return (
     <BrowserRouter basename="/SmartCheckout">
+       <Toaster position="top-center" /> 
       <Routes>
         {/* الصفحات الخارجية المستقلة */}
         <Route path="/" element={<LandingPage />} />

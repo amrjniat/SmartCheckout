@@ -47,18 +47,21 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     const status = error.response?.status;
+    const requestUrl = (error.config?.url || '').toLowerCase();
+    const isLoginRequest = requestUrl.includes('/auth/login');
 
-    if (status === 401) {
+    if (status === 401 && !isLoginRequest) {
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('user');
 
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      // ✅ تصحيح: نتحقق من "احتواء" المسار بدل المطابقة الكاملة
+      // بسبب وجود basename="/SmartCheckout" بالـ BrowserRouter
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/SmartCheckout/login';
       }
     }
 
     return Promise.reject(error);
   }
 );
-
 export default axiosInstance;
