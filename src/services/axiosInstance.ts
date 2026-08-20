@@ -1,8 +1,8 @@
 
 
-
-
 import axios from 'axios';
+import { stopSignalRConnection } from './signalRService';
+import sessionService from './sessionService';
 
 // ============================================
 // Axios Instance مركزي لكل طلبات المشروع
@@ -24,7 +24,7 @@ const axiosInstance = axios.create({
 // ============================================
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = sessionStorage.getItem('token');
+    const token = sessionService.getToken();
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -45,14 +45,20 @@ axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
     const status = error.response?.status;
     const requestUrl = (error.config?.url || '').toLowerCase();
     const isLoginRequest = requestUrl.includes('/auth/login');
 
     if (status === 401 && !isLoginRequest) {
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('user');
+      // ✅ إصلاح: إيقاف SignalR أولاً حتى لا يبقى اتصال مفتوح بجلسة منتهية بعد الـ 401
+      try {
+        await stopSignalRConnection();
+      } catch (signalRStopError) {
+        console.warn('⚠️ تعذر إيقاف اتصال SignalR بعد 401:', signalRStopError);
+      }
+
+      sessionService.clear();
 
       // ✅ تصحيح: نتحقق من "احتواء" المسار بدل المطابقة الكاملة
       // بسبب وجود basename="/SmartCheckout" بالـ BrowserRouter

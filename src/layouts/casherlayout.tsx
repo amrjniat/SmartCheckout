@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header, { type MenuItem, type TimeFilter } from '../components/layout/header2';
 import { type PageHeaderData } from './DashboardLayout';
+import { logout } from '../services/authService';
 const defaultWarehouseData = {
   userName: 'عمرو جنيات',
   userTitle: 'الكاشير (المحاسب)',
@@ -16,6 +17,11 @@ export default function WarehouseLayout() {
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
 
   // ✅ إعادة تعيين showHeader عند تغيير المسار لضمان ظهور الشريط افتراضياً
   useEffect(() => {
@@ -67,6 +73,8 @@ const defaultMenuItems: MenuItem[] = [
           showFilters={headerData.showFilters !== false}
           showNotifications={headerData.showNotifications !== false}
           showUserCard={headerData.showUserCard !== false}
+          showLogout={true}
+          onLogout={handleLogout}
           langBtn={headerData.langBtn}
         />
       )}

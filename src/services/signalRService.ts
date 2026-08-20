@@ -1,34 +1,9 @@
-// import * as signalR from '@microsoft/signalr';
-
-// // قمنا باستخدام نفس المنفذ (5157) المخصص للباك إند الخاص بك
-// // قد تحتاج لتعديل مسار "/hub/pos" لاحقاً بناءً على الاسم الذي اعتمده مطور ASP.NET
-// const HUB_URL = 'http://localhost:5157/hub/pos';
-
-// const connection = new signalR.HubConnectionBuilder()
-//     .withUrl(HUB_URL)
-//     .withAutomaticReconnect() // يقوم بإعادة الاتصال تلقائياً لو انقطع الإنترنت
-//     .build();
-
-// export const startSignalRConnection = async () => {
-//     try {
-//         if (connection.state === signalR.HubConnectionState.Disconnected) {
-//             await connection.start();
-//             console.log('SignalR Connected Successfully!');
-//         }
-//     } catch (err) {
-//         console.error('Error while starting SignalR connection: ', err);
-//         // في حال الفشل، حاول الاتصال مجدداً بعد 5 ثوانٍ
-//         setTimeout(startSignalRConnection, 5000); 
-//     }
-// };
-
-// export default connection;
-
 
 
 
 
 import * as signalR from '@microsoft/signalr';
+import sessionService from './sessionService';
 
 // ============================================
 // ✅ تعديل 1: الرابط أصبح يُقرأ من متغيرات البيئة بدل التثبيت المباشر (Hardcoded)
@@ -47,7 +22,7 @@ const HUB_URL = import.meta.env.VITE_HUB_URL || 'http://localhost:5157/hub/pos';
 // ✅ تصحيح: الرجوع لـ sessionStorage (بدل localStorage) ليطابق authService.ts و axiosInstance.ts
 const connection = new signalR.HubConnectionBuilder()
     .withUrl(HUB_URL, {
-        accessTokenFactory: () => sessionStorage.getItem("token") || ""
+        accessTokenFactory: () => sessionService.getToken() || ""
     })
     .withAutomaticReconnect()
     .build();
@@ -92,6 +67,13 @@ connection.onreconnecting(() => notifyConnectionState());
 connection.onreconnected(() => notifyConnectionState());
 connection.onclose(() => notifyConnectionState());
 
+// ============================================
+// ✅ تعديل 4: تتبّع مؤقت إعادة المحاولة حتى نقدر نلغيه عند تسجيل الخروج
+// بدون هذا، لو المستخدم خرج قبل انتهاء الـ 5 ثوانٍ، سيحاول SignalR
+// إعادة الاتصال بجلسة منتهية بعد الخروج
+// ============================================
+let reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
 export const startSignalRConnection = async () => {
     try {
         if (connection.state === signalR.HubConnectionState.Disconnected) {
@@ -102,7 +84,28 @@ export const startSignalRConnection = async () => {
     } catch (err) {
         console.error('Error while starting SignalR connection: ', err);
         notifyConnectionState();
-        setTimeout(startSignalRConnection, 5000);
+        reconnectTimeoutId = setTimeout(startSignalRConnection, 5000);
+    }
+};
+
+// ============================================
+// ✅ تعديل 5: دالة إيقاف الاتصال — تُستدعى عند تسجيل الخروج
+// تلغي أي مؤقت إعادة محاولة معلّق، ثم توقف الاتصال الفعلي إن كان قائماً
+// ============================================
+export const stopSignalRConnection = async (): Promise<void> => {
+    if (reconnectTimeoutId !== null) {
+        clearTimeout(reconnectTimeoutId);
+        reconnectTimeoutId = null;
+    }
+
+    if (connection.state !== signalR.HubConnectionState.Disconnected) {
+        try {
+            await connection.stop();
+            console.log('SignalR Disconnected Successfully!');
+        } catch (err) {
+            console.error('Error while stopping SignalR connection: ', err);
+        }
+        notifyConnectionState();
     }
 };
 

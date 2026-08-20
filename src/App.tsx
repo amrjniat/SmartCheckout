@@ -39,9 +39,10 @@ import GeneralSettings from './pages/GeneralSettings';
 import NotificationsPage from './pages/Notifications';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'react-hot-toast'; 
+import sessionService from './services/sessionService';
 function App() {
   useEffect(() => {
-const token = sessionStorage.getItem('token'); // ✅ تصحيح: كان localStorage
+    const token = sessionService.getToken();
     if (token) {
       startSignalRConnection();
     }

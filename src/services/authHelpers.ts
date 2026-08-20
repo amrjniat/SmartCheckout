@@ -1,19 +1,15 @@
-import { jwtDecode } from 'jwt-decode';
-
-interface DecodedToken {
-  BranchId?: string;
-  FullName?: string;
-  [key: string]: any; // باقي الـ Claims (نوعها URI طويل زي ClaimTypes.Role)
-}
+import sessionService from './sessionService';
+import { decodeToken } from './tokenUtils';
 
 export const getBranchIdFromToken = (): number | null => {
-  const token = localStorage.getItem('token');
+  const token = sessionService.getToken();
   if (!token) return null;
 
   try {
-    const decoded = jwtDecode<DecodedToken>(token);
-    if (!decoded.BranchId) return null;
-    return parseInt(decoded.BranchId, 10);
+    const decoded = decodeToken(token);
+    const branchId = decoded?.BranchId;
+    if (typeof branchId !== 'string') return null;
+    return parseInt(branchId, 10);
   } catch (err) {
     console.error('فشل فك التوكن:', err);
     return null;
