@@ -1,12 +1,7 @@
-
-
 import axios from 'axios';
 import { stopSignalRConnection } from './signalRService';
 import sessionService from './sessionService';
-
-// ============================================
-// Axios Instance مركزي لكل طلبات المشروع
-// ============================================
+import { getValidDecodedToken } from './tokenUtils';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5157/api';
 
@@ -17,16 +12,11 @@ const axiosInstance = axios.create({
   },
 });
 
-// ============================================
-// Request Interceptor
-// يضيف الـ Authorization Header تلقائياً لكل طلب
-// ✅ تصحيح: الرجوع لـ sessionStorage (بدل localStorage) ليطابق authService.ts
-// ============================================
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = sessionService.getToken();
 
-    if (token) {
+    if (token && getValidDecodedToken(token)) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -37,10 +27,6 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// ============================================
-// Response Interceptor
-// يعالج انتهاء صلاحية التوكن (401) بشكل مركزي
-// ============================================
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
@@ -51,7 +37,6 @@ axiosInstance.interceptors.response.use(
     const isLoginRequest = requestUrl.includes('/auth/login');
 
     if (status === 401 && !isLoginRequest) {
-      // ✅ إصلاح: إيقاف SignalR أولاً حتى لا يبقى اتصال مفتوح بجلسة منتهية بعد الـ 401
       try {
         await stopSignalRConnection();
       } catch (signalRStopError) {
@@ -60,8 +45,6 @@ axiosInstance.interceptors.response.use(
 
       sessionService.clear();
 
-      // ✅ تصحيح: نتحقق من "احتواء" المسار بدل المطابقة الكاملة
-      // بسبب وجود basename="/SmartCheckout" بالـ BrowserRouter
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/SmartCheckout/login';
       }
@@ -70,4 +53,5 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 export default axiosInstance;
