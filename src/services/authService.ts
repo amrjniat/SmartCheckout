@@ -24,11 +24,13 @@ export const login = async (username: string, password: string) => {
     // ✅ تصحيح: الرجوع لاستخدام sessionStorage (بدل localStorage) لعزل التبويبات حسب الدور
     // ملاحظة: axiosInstance.ts و signalRService.ts يجب تعديلهما بنفس الطريقة ليطابقا هذا الملف
     if (response.data?.token) {
+      sessionService.clear();
       sessionService.setToken(response.data.token);
 
       // حفظ بيانات المستخدم إذا كانت راجعة من الخادم (مفيدة لمعرفة Role في الصفحة)
-      if (response.data.user) {
-        sessionService.setUser(response.data.user);
+      const user = response.data.user ?? response.data.User ?? response.data.data?.user;
+      if (user && typeof user === 'object') {
+        sessionService.setUser(user);
       }
 
       // 2. تشغيل SignalR داخل try/catch منفصل تماماً (Safe Execution)

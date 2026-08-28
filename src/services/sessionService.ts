@@ -5,6 +5,10 @@ export interface StoredUser {
 const TOKEN_KEY = 'token';
 const USER_KEY = 'user';
 
+function notifySessionChanged(): void {
+  window.dispatchEvent(new Event('pos-session-changed'));
+}
+
 export const sessionService = {
   getToken(): string | null {
     return sessionStorage.getItem(TOKEN_KEY);
@@ -12,6 +16,7 @@ export const sessionService = {
 
   setToken(token: string): void {
     sessionStorage.setItem(TOKEN_KEY, token);
+    notifySessionChanged();
   },
 
   getUser<T extends StoredUser = StoredUser>(): T | null {
@@ -27,11 +32,15 @@ export const sessionService = {
 
   setUser(user: StoredUser): void {
     sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    notifySessionChanged();
   },
 
   clear(): void {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    notifySessionChanged();
   },
 
   isAuthenticated(): boolean {

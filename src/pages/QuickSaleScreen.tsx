@@ -4,6 +4,8 @@ import { useOutletContext } from 'react-router-dom';
 import { getProducts, deleteProduct } from '../services/productService';
 import axiosInstance from '../services/axiosInstance';
 import { startSignalRConnection } from '../services/signalRService';
+import { useOrganization } from '../contexts/OrganizationContext';
+import sessionService from '../services/sessionService';
 
 interface Category {
   id: string;
@@ -241,6 +243,7 @@ interface LayoutContext {
 }
 
 export default function QuickSaleScreen() {
+  const organization = useOrganization();
   const { isRtl } = useOutletContext<LayoutContext>();
   const t = isRtl ? T.ar : T.en;
 
@@ -278,7 +281,9 @@ export default function QuickSaleScreen() {
           const names = resolveProductNames(item);
 
           const totalStock = item.productWarehouses && Array.isArray(item.productWarehouses)
-            ? item.productWarehouses.reduce((sum: number, w: any) => sum + (w.quantity || 0), 0)
+            ? item.productWarehouses
+                .filter((warehouse: any) => !organization?.warehouseId || warehouse.warehouseId === organization.warehouseId)
+                .reduce((sum: number, w: any) => sum + (w.quantity || 0), 0)
             : 0;
 
           return {
@@ -306,7 +311,7 @@ export default function QuickSaleScreen() {
       console.error("حدث خطأ أثناء جلب المنتجات:", error);
       setProductList([]);
     }
-  }, []);
+  }, [organization?.warehouseId]);
 
   useEffect(() => {
     fetchProducts();
@@ -471,14 +476,42 @@ export default function QuickSaleScreen() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const BRANCH_ID = 1;
-const WAREHOUSE_ID = 2;
-
   const completeSale = useCallback(async () => {
     if (cart.length === 0 || !payMethod) return;
 
     if (!customer) {
       pushToast('error', t.selectCustomer);
+      return;
+    }
+    let branchId = organization?.branchId;
+    let warehouseId = organization?.warehouseId;
+
+    if (!branchId || !warehouseId) {
+      try {
+        const response = await axiosInstance.get('/Auth/me');
+        const currentUser = response.data?.user ?? response.data?.User ?? response.data;
+        branchId = Number(currentUser?.branchId ?? currentUser?.BranchId);
+        warehouseId = Number(
+          currentUser?.warehouseId ?? currentUser?.WarehouseId ?? currentUser?.defaultWarehouseId
+        );
+
+        if (currentUser && branchId > 0 && warehouseId > 0) {
+          sessionService.setUser({ ...currentUser, branchId, warehouseId });
+        }
+      } catch (error) {
+        console.error('Failed to refresh current user context:', error);
+      }
+    }
+
+    if (
+      typeof branchId !== 'number' ||
+      !Number.isInteger(branchId) ||
+      branchId <= 0 ||
+      typeof warehouseId !== 'number' ||
+      !Number.isInteger(warehouseId) ||
+      warehouseId <= 0
+    ) {
+      pushToast('error', isRtl ? 'لم يتم تحديد الفرع والمستودع للمستخدم الحالي.' : 'No branch and warehouse are assigned to the current user.');
       return;
     }
 
@@ -501,8 +534,8 @@ const WAREHOUSE_ID = 2;
 
       const payload = {
         customerId: Number(customer.id),
-        branchId: BRANCH_ID,
-        warehouseId: WAREHOUSE_ID,
+        branchId,
+        warehouseId,
         paymentMethod: payMethod, // ✅ كان ناقص من الـ payload، وهو غالباً حقل مطلوب (required) بالـ DTO على الباك اند
         discountAmount: discount > 0 ? discount : undefined,
         items,
@@ -525,7 +558,7 @@ const WAREHOUSE_ID = 2;
     } finally {
       setIsSubmitting(false);
     }
-  }, [cart, payMethod, customer, discount, newSale, pushToast, t, fetchProducts]);
+  }, [cart, payMethod, customer, discount, newSale, pushToast, t, fetchProducts, organization, isRtl]);
 
   const selectCustomer = useCallback(
     (c: Customer) => {

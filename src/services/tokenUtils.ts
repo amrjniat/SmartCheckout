@@ -8,8 +8,8 @@ const CLAIM_ROLE =
 const CLAIM_NAME =
   'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
 const CLAIM_FULL_NAME = 'FullName';
-const CLAIM_BRANCH_ID = ['branchId', 'BranchId'];
-const CLAIM_WAREHOUSE_ID = ['warehouseId', 'WarehouseId'];
+const CLAIM_BRANCH_ID = ['branchId', 'BranchId', 'branchID', 'BranchID'];
+const CLAIM_WAREHOUSE_ID = ['warehouseId', 'WarehouseId', 'warehouseID', 'WarehouseID'];
 
 export interface DecodedToken {
   exp: number;
@@ -29,6 +29,25 @@ function readNumericClaim(decoded: DecodedToken, keys: string[]): number | null 
       const parsed = Number.parseInt(value, 10);
       if (Number.isFinite(parsed)) return parsed;
     }
+  }
+
+  const normalizedKeys = keys.map((key) => key.toLowerCase());
+  for (const [key, value] of Object.entries(decoded)) {
+    const normalizedKey = key.toLowerCase();
+    if (!normalizedKeys.includes(normalizedKey) && !normalizedKeys.some((claim) => normalizedKey.endsWith(`/${claim}`))) {
+      continue;
+    }
+    const parsed = readNumericValue(value);
+    if (parsed !== null) return parsed;
+  }
+  return null;
+}
+
+function readNumericValue(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed)) return parsed;
   }
   return null;
 }
@@ -85,5 +104,7 @@ export function getCurrentBranchId(): number | null {
 
 export function getCurrentWarehouseId(): number | null {
   const decoded = getValidDecodedToken();
-  return decoded ? readNumericClaim(decoded, CLAIM_WAREHOUSE_ID) : null;
+  return decoded
+    ? readNumericClaim(decoded, [...CLAIM_WAREHOUSE_ID, 'defaultWarehouseId', 'DefaultWarehouseId'])
+    : null;
 }

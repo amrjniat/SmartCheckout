@@ -6,6 +6,7 @@ import {
   X, CheckCircle, BarChart3
 } from 'lucide-react';
 import { inventoryService } from '../services/inventoryService';
+import { useOrganization } from '../contexts/OrganizationContext';
 
 // ================= Layout Context =================
 interface DashboardContext {
@@ -159,6 +160,7 @@ interface ProductInventory {
 
 export default function InventoryManagement() {
   const { isRtl } = useOutletContext<DashboardContext>();
+  const organization = useOrganization();
   const lang: Lang = isRtl ? 'ar' : 'en';
   const t = translations[lang];
   const location = useLocation();
@@ -194,8 +196,13 @@ export default function InventoryManagement() {
     setIsLoading(true);
     setLoadError(null);
     try {
+      if (!organization?.warehouseId) {
+        setInventory([]);
+        setLoadError(isRtl ? 'لم يتم تحديد المستودع للمستخدم الحالي.' : 'No warehouse is assigned to the current user.');
+        return;
+      }
       // جلب البيانات الحقيقية من الباك إند
-      const data = await inventoryService.getInventory();
+      const data = await inventoryService.getInventory(organization.warehouseId);
       setInventory(data);
     } catch (err) {
       console.error('Error fetching inventory:', err);
@@ -203,12 +210,11 @@ export default function InventoryManagement() {
     } finally {
       setIsLoading(false);
     }
-  }, [t.loadErrorMessage]);
+  }, [isRtl, organization?.warehouseId, t.loadErrorMessage]);
 
   useEffect(() => {
-    loadInventory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void loadInventory();
+  }, [loadInventory]);
   
   const getLocalized = (value: LocalizedText) => value[lang];
 
@@ -227,11 +233,15 @@ export default function InventoryManagement() {
   // ================= Actions =================
   const handleSaveAdjustment = async () => {
     if (!selectedProduct || adjustQty <= 0) return;
+    if (!organization?.warehouseId) {
+      showToast(isRtl ? 'لم يتم تحديد المستودع للمستخدم الحالي.' : 'No warehouse is assigned to the current user.');
+      return;
+    }
 
     try {
       // 1. تمرير (productId) أولاً كمعيار أول، ثم كائن البيانات (data) كمعيار ثانٍ
       await inventoryService.adjustStock(selectedProduct.id, {
-        warehouseId: 1, // رقم المستودع الافتراضي
+        warehouseId: organization.warehouseId,
         type: modalAction, // 'add' | 'subtract' | 'set'
         quantity: adjustQty,
         reason: adjustReason || undefined,
@@ -279,7 +289,11 @@ export default function InventoryManagement() {
 
     try {
       // 2. جلب الحركات الحقيقية من الباك إند للمستودع الافتراضي (1)
-      const historyData = await inventoryService.getProductMovements(product.id, 1);
+      if (!organization?.warehouseId) {
+        showToast(isRtl ? 'لم يتم تحديد المستودع للمستخدم الحالي.' : 'No warehouse is assigned to the current user.');
+        return;
+      }
+      const historyData = await inventoryService.getProductMovements(product.id, organization.warehouseId);
       
       // 3. تحديث حالة المنتج لإظهار البيانات الجديدة في النافذة
       setSelectedProduct(prev => prev ? { ...prev, history: historyData } : null);

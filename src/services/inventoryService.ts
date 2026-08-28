@@ -11,14 +11,13 @@ export interface AdjustStockRequest {
 
 export const inventoryService = {
   // 1. جلب كافة المنتجات وتحويل شكل البيانات لتناسب الواجهة
-  getInventory: async () => {
+  getInventory: async (warehouseId: number) => {
     const response = await axiosInstance.get('/products');
     const rawData = response.data;
 
     // Mapping: تحويل بيانات C# إلى الهيكل المطلوب في React
     return rawData.map((p: any) => {
-      // استخراج الكمية الحالية من المستودع الأول (Default WarehouseId = 1)
-      const primaryWarehouse = p.productWarehouses?.find((w: any) => w.warehouseId === 1);
+      const primaryWarehouse = p.productWarehouses?.find((w: any) => w.warehouseId === warehouseId);
       const currentQty = primaryWarehouse ? primaryWarehouse.quantity : 0;
 
       return {
@@ -46,7 +45,7 @@ export const inventoryService = {
   },
 
   // 3. جلب سجل الحركات لمنتج معين عند فتح الـ Drawer
-  getProductMovements: async (productId: string, warehouseId: number = 1) => {
+  getProductMovements: async (productId: string, warehouseId: number) => {
     const response = await axiosInstance.get(`/products/${productId}/movements`, {
       params: { warehouseId },
     });
