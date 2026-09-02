@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axiosInstance from '../services/axiosInstance';
+import { inventoryService } from '../services/inventoryService';
 
 // شكل المنتج كما يُرجعه الباك إند فعلياً (GET /api/Products مع include للمخزون)
 interface BackendProduct {
@@ -14,14 +15,14 @@ interface RestockModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void; // يُستدعى بعد نجاح التعبئة لتحديث لوحة المستودع
-  warehouseId?: number; // افتراضياً المستودع الرئيسي (1)
+  warehouseId?: number;
 }
 
 const RestockModal: React.FC<RestockModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  warehouseId = 1,
+  warehouseId,
 }) => {
   const [allProducts, setAllProducts] = useState<BackendProduct[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
@@ -71,6 +72,12 @@ const RestockModal: React.FC<RestockModalProps> = ({
       ?.filter((w) => w.warehouseId === warehouseId)
       .reduce((sum, w) => sum + (w.quantity || 0), 0) ?? 0;
 
+  const getProductWarehouseId = (product: BackendProduct): number | undefined => {
+    if (warehouseId) return warehouseId;
+    const warehouseIds = [...new Set(product.productWarehouses?.map((w) => w.warehouseId) ?? [])];
+    return warehouseIds.length === 1 ? warehouseIds[0] : undefined;
+  };
+
   if (!isOpen) return null;
 
   const handleSelectProduct = (product: BackendProduct) => {
@@ -88,6 +95,11 @@ const RestockModal: React.FC<RestockModalProps> = ({
       setErrorMessage('يرجى اختيار منتج أولاً من نتائج البحث.');
       return;
     }
+    const requestWarehouseId = getProductWarehouseId(selectedProduct);
+    if (!requestWarehouseId) {
+      setErrorMessage('لم يتم تحديد المستودع للمستخدم الحالي.');
+      return;
+    }
     const qtyNumber = Number(quantity);
     if (!qtyNumber || qtyNumber <= 0) {
       setErrorMessage('يرجى إدخال كمية صحيحة أكبر من صفر.');
@@ -96,13 +108,20 @@ const RestockModal: React.FC<RestockModalProps> = ({
 
     setIsSaving(true);
     try {
-      const response = await axiosInstance.post(`/Products/${selectedProduct.id}/restock`, {
-        quantity: qtyNumber,
-        warehouseId,
-      });
+      const response = await inventoryService.restockProduct(
+        String(selectedProduct.id),
+        requestWarehouseId,
+        qtyNumber,
+        'استلام بضاعة'
+      );
+
+      const newQuantity =
+        response?.newQuantity ??
+        response?.data?.newQuantity ??
+        currentStock(selectedProduct) + qtyNumber;
 
       setSuccessMessage(
-        `✅ تم استلام ${qtyNumber} قطعة من "${selectedProduct.productName}". الرصيد الجديد: ${response.data.newQuantity}.`
+        `✅ تم استلام ${qtyNumber} قطعة من "${selectedProduct.productName}". الرصيد الجديد: ${newQuantity}.`
       );
 
       // تفريغ الحقول للسماح باستلام منتج آخر دون إغلاق النافذة

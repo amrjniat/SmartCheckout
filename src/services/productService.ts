@@ -18,31 +18,52 @@
 
 
 
-// نستورد الـ instance الخاص بنا بدلاً من مكتبة axios المباشرة
 import axiosInstance from './axiosInstance';
+
+export interface ProductWarehouseSummary {
+  id?: number;
+  warehouseId?: number;
+  quantity?: number;
+  stockQuantity?: number;
+}
+
+export interface ProductCategorySummary {
+  id?: number;
+  categoryName?: string;
+  name?: string;
+}
 
 export interface Product {
   id: number | string;
-  name: string;
-  stockQuantity: number;
+  productName?: string;
+  name?: string;
+  productCode?: string;
+  barcode?: string;
   price?: number;
-  category?: string;
+  unitPrice?: number;
+  sellingPrice?: number;
+  purchasePrice?: number;
+  imageUrl?: string;
+  category?: string | ProductCategorySummary | null;
+  categoryName?: string;
+  categoryId?: number | string;
+  productWarehouses?: ProductWarehouseSummary[];
+  minStock?: number;
+  stockQuantity?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// دالة جلب المنتجات
 export const getProducts = async (): Promise<Product[]> => {
   const response = await axiosInstance.get<Product[]>('/Products');
-  return response.data;
+  return Array.isArray(response.data) ? response.data : [];
 };
 
-// دالة إضافة مادة جديدة للـ Backend
 export const addProduct = async (productData: Omit<Product, 'id'>): Promise<Product> => {
   const response = await axiosInstance.post<Product>('/Products', productData);
   return response.data;
 };
 
-// دالة حذف منتج (Soft Delete) - الباك إند لا يحذفه فعلياً من قاعدة البيانات،
-// بل يضع IsActive = false للحفاظ على سجل الفواتير القديمة المرتبطة بهذا المنتج
 export const deleteProduct = async (id: number | string): Promise<void> => {
   await axiosInstance.delete(`/Products/${id}`);
 };

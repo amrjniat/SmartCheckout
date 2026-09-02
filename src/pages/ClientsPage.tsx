@@ -12,6 +12,7 @@ import {
   createCustomer,
 } from '../services/customerService';
 import type { Customer, CustomerStats } from '../services/customerService';
+import { notificationService } from '../services/notification.service';
 type LayoutContext = { isRtl: boolean; setIsRtl: (value: boolean) => void };
 
 // ================= Translations =================
@@ -185,12 +186,24 @@ export default function CustomersPage() {
       });
       setIsAddModalOpen(false);
       setNewCustomerForm({ name: '', phone: '', email: '' });
+      notificationService.notifyClient(
+        isRTL ? 'تمت إضافة العميل بنجاح' : 'Customer added successfully',
+        isRTL ? `تمت إضافة العميل ${newCustomerForm.name} بنجاح.` : `Customer ${newCustomerForm.name} was added successfully.`,
+        'success',
+        '/clients'
+      );
       // إعادة تحميل القائمة والإحصائيات عشان العميل الجديد يظهر فورًا
       await loadCustomers(searchTerm);
       await loadStats();
     } catch (err: any) {
       console.error('❌ فشل إضافة العميل:', err);
       setAddError(err?.response?.data?.message || t.errorAdd);
+      notificationService.notifyClient(
+        isRTL ? 'فشل إضافة العميل' : 'Failed to add customer',
+        err?.response?.data?.message || (isRTL ? 'حدث خطأ أثناء إضافة العميل.' : 'An error occurred while adding the customer.'),
+        'error',
+        '/clients'
+      );
     } finally {
       setIsSaving(false);
     }

@@ -81,14 +81,20 @@
 
 import axiosInstance from './axiosInstance';
 
+export type InvoiceStatus = 'مدفوعة' | 'غير مدفوعة' | 'ملغاة';
+
+export const normalizeInvoiceStatus = (value: unknown): InvoiceStatus => {
+  const raw = String(value ?? '').trim();
+  const normalized = raw.toLowerCase();
+
+  if (normalized === 'paid' || normalized.includes('paid') || raw === 'مدفوعة') return 'مدفوعة';
+  if (normalized === 'cancelled' || normalized === 'canceled' || normalized.includes('cancel') || raw === 'ملغاة') return 'ملغاة';
+  return 'غير مدفوعة';
+};
+
 // ============================================
 // أنواع البيانات (Types)
 // ============================================
-
-// ✅ القيم الرسمية الوحيدة المسموحة لحالة الفاتورة (موثقة بتعليق داخل Invoice.cs بالباك إند)
-// ملاحظة: الباك إند (UpdateStatus action) لا يتحقق من هذه القيمة إطلاقاً —
-// الالتزام بها مسؤولية الفرونت إند بالكامل عبر هذا الـ type.
-export type InvoiceStatus = 'مدفوعة' | 'غير مدفوعة' | 'ملغاة';
 
 // شكل الفاتورة كما يرجعها GET /api/invoices (نفس الاسم الأصلي InvoiceSummary — محفوظ للتوافق
 // مع الملفات القديمة مثل CashierDashboard.tsx)

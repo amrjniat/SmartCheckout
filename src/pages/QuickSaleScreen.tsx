@@ -6,6 +6,8 @@ import axiosInstance from '../services/axiosInstance';
 import { startSignalRConnection } from '../services/signalRService';
 import { useOrganization } from '../contexts/OrganizationContext';
 import sessionService from '../services/sessionService';
+import { notificationService } from '../services/notification.service';
+import { getCurrentBranchId, getCurrentWarehouseId } from '../services/tokenUtils';
 
 interface Category {
   id: string;
@@ -174,6 +176,8 @@ function stockStatus(stock: number): StockStatus {
 function formatMoney(n: number) {
   return n.toLocaleString('en-US');
 }
+
+const numberFormat = (n: number) => n.toLocaleString('en-US');
 
 const AVATAR_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444', '#84cc16'];
 
@@ -397,6 +401,12 @@ export default function QuickSaleScreen() {
       deleteProduct(id)
         .then(() => {
           pushToast('info', t.productDeleted);
+          notificationService.notifyInventory(
+            isRtl ? 'تم حذف المنتج' : 'Product removed',
+            isRtl ? `تم حذف المنتج ${productBackup?.ar ?? productBackup?.en ?? 'المحدد'} من المخزون.` : `Product ${productBackup?.en ?? productBackup?.ar ?? 'selected'} was removed from inventory.`,
+            'info',
+            '/products'
+          );
         })
         .catch((err) => {
           console.error('فشل حذف المنتج من الباك إند:', err?.response?.data || err);
@@ -404,6 +414,12 @@ export default function QuickSaleScreen() {
             setProductList((prev) => [...prev, productBackup]);
           }
           pushToast('error', isRtl ? 'تعذر حذف المنتج، حاولوا مرة أخرى.' : 'Failed to delete product.');
+          notificationService.notifyInventory(
+            isRtl ? 'فشل حذف المنتج' : 'Delete product failed',
+            isRtl ? 'تعذر حذف المنتج، حاول مرة أخرى.' : 'The product could not be deleted. Please try again.',
+            'error',
+            '/products'
+          );
         });
     },
     [pushToast, t, productList, isRtl]
@@ -483,19 +499,39 @@ export default function QuickSaleScreen() {
       pushToast('error', t.selectCustomer);
       return;
     }
-    let branchId = organization?.branchId;
-    let warehouseId = organization?.warehouseId;
+    let branchId = organization?.branchId ?? getCurrentBranchId();
+    let warehouseId = organization?.warehouseId ?? getCurrentWarehouseId();
 
-    if (!branchId || !warehouseId) {
+    if ((!branchId || !warehouseId) && sessionService.getToken()) {
+      const currentUser = sessionService.getUser<Record<string, unknown>>();
+      branchId = Number(currentUser?.branchId ?? currentUser?.BranchId ?? getCurrentBranchId());
+      warehouseId = Number(
+        currentUser?.warehouseId ??
+          currentUser?.WarehouseId ??
+          currentUser?.defaultWarehouseId ??
+          currentUser?.DefaultWarehouseId ??
+          getCurrentWarehouseId()
+      );
+
+      if (currentUser && Number.isFinite(branchId) && branchId > 0 && Number.isFinite(warehouseId) && warehouseId > 0) {
+        sessionService.setUser({ ...currentUser, branchId, warehouseId });
+      }
+    }
+
+    if ((!branchId || !warehouseId) && !sessionService.getToken()) {
       try {
         const response = await axiosInstance.get('/Auth/me');
         const currentUser = response.data?.user ?? response.data?.User ?? response.data;
-        branchId = Number(currentUser?.branchId ?? currentUser?.BranchId);
+        branchId = Number(currentUser?.branchId ?? currentUser?.BranchId ?? getCurrentBranchId());
         warehouseId = Number(
-          currentUser?.warehouseId ?? currentUser?.WarehouseId ?? currentUser?.defaultWarehouseId
+          currentUser?.warehouseId ??
+            currentUser?.WarehouseId ??
+            currentUser?.defaultWarehouseId ??
+            currentUser?.DefaultWarehouseId ??
+            getCurrentWarehouseId()
         );
 
-        if (currentUser && branchId > 0 && warehouseId > 0) {
+        if (currentUser && Number.isFinite(branchId) && branchId > 0 && Number.isFinite(warehouseId) && warehouseId > 0) {
           sessionService.setUser({ ...currentUser, branchId, warehouseId });
         }
       } catch (error) {
@@ -544,6 +580,14 @@ export default function QuickSaleScreen() {
       await axiosInstance.post('/invoices', payload);
 
       pushToast('success', t.saleSuccess);
+      notificationService.notifySales(
+        isRtl ? 'تمت عملية بيع ناجحة' : 'Sale completed successfully',
+        isRtl
+          ? `تمت بيع ${items.length} عنصر بنجاح، إجمالي الفاتورة ${numberFormat(total)} ر.س.`
+          : `Completed ${items.length} item(s) successfully. Invoice total: ${numberFormat(total)} SAR.`,
+        'success',
+        '/invoices'
+      );
       
       // ✅ تحديث فوري (Optimistic) لقائمة المنتجات بعد نجاح البيع مباشرة
       // بدل الانتظار الكامل لوصول حدث SignalR، حتى لا تظهر كميات قديمة
@@ -554,6 +598,12 @@ export default function QuickSaleScreen() {
     } catch (error: any) {
       const serverMessage = error.response?.data?.message;
       pushToast('error', serverMessage || t.saleFailed);
+      notificationService.notifySales(
+        isRtl ? 'فشل إتمام البيع' : 'Sale failed',
+        serverMessage || (isRtl ? 'فشل إتمام عملية البيع، حاول مجدداً.' : 'Sale could not be completed. Please try again.'),
+        'error',
+        '/invoices'
+      );
       console.error('فشل إتمام عملية البيع:', error);
     } finally {
       setIsSubmitting(false);
@@ -597,9 +647,21 @@ export default function QuickSaleScreen() {
       setShowCustomerPicker(false);
       setNewCustomer({ name: '', phone: '' });
       pushToast('success', isRtl ? 'تمت إضافة العميل واختياره' : 'Customer added and selected');
+      notificationService.notifyClient(
+        isRtl ? 'تمت إضافة عميل جديد' : 'New customer added',
+        isRtl ? `تمت إضافة العميل ${mapped.name} بنجاح.` : `Customer ${mapped.name} was added successfully.`,
+        'success',
+        '/clients'
+      );
     } catch (error: any) {
       const serverMessage = error.response?.data?.message;
       pushToast('error', serverMessage || (isRtl ? 'فشل إضافة العميل' : 'Failed to add customer'));
+      notificationService.notifyClient(
+        isRtl ? 'فشل إضافة العميل' : 'Customer addition failed',
+        serverMessage || (isRtl ? 'تعذر إضافة العميل، حاول مرة أخرى.' : 'The customer could not be added. Please try again.'),
+        'error',
+        '/clients'
+      );
       console.error('فشل إنشاء عميل جديد:', error);
     } finally {
       setIsAddingCustomer(false);

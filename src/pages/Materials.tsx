@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import AddProductModal from '../components/AddProductModal'; // عدّلوا المسار حسب مكان الملف الفعلي عندكم
 import { useOutletContext, useNavigate, useLocation } from 'react-router-dom';
+import { ROUTES } from '../constants/routes';
 
 interface DashboardContext {
   isRtl: boolean;
@@ -463,7 +464,7 @@ export default function ProductsManagementPage() {
                     </button>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => navigate('/warehouse')} className="px-3 py-2 rounded-xl text-xs font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors flex items-center gap-1">
+                    <button onClick={() => navigate(ROUTES.warehouse)} className="px-3 py-2 rounded-xl text-xs font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors flex items-center gap-1">
                       <span>🏭</span> عرض لوحة المستودع
                     </button>
                     <button onClick={() => window.print()} className="px-3 py-2 rounded-xl text-xs font-bold text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors flex items-center gap-1">

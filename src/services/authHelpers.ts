@@ -1,17 +1,5 @@
-import sessionService from './sessionService';
-import { decodeToken } from './tokenUtils';
+import { getCurrentBranchId, getCurrentWarehouseId } from './tokenUtils';
 
-export const getBranchIdFromToken = (): number | null => {
-  const token = sessionService.getToken();
-  if (!token) return null;
+export const getBranchIdFromToken = (): number | null => getCurrentBranchId();
 
-  try {
-    const decoded = decodeToken(token);
-    const branchId = decoded?.BranchId;
-    if (typeof branchId !== 'string') return null;
-    return parseInt(branchId, 10);
-  } catch (err) {
-    console.error('فشل فك التوكن:', err);
-    return null;
-  }
-};
+export const getWarehouseIdFromToken = (): number | null => getCurrentWarehouseId();

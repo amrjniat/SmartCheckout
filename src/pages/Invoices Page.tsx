@@ -12,6 +12,7 @@ import {
   type InvoiceListItem,
   type InvoiceDetail,
 } from '../services/invoiceService'; // ⚠️ عدّل المسار حسب مكان الملف الفعلي عندك
+import { notificationService } from '../services/notification.service';
 
 /* =========================================================
    الأنواع (Types)
@@ -463,9 +464,21 @@ export default function Invoices() {
       await updateInvoiceStatus(inv.id, 'ملغاة');
       applyStatusLocally(inv.id, 'ملغاة');
       setToast(t.toastCancelled(inv.invoiceNumber));
+      notificationService.notifyInvoice(
+        isRtl ? 'تم إلغاء الفاتورة' : 'Invoice cancelled',
+        isRtl ? `تم إلغاء الفاتورة ${inv.invoiceNumber} بنجاح.` : `Invoice ${inv.invoiceNumber} was cancelled successfully.`,
+        'warning',
+        '/invoices'
+      );
     } catch (err) {
       console.error(`❌ خطأ أثناء إلغاء الفاتورة رقم ${inv.id}:`, err);
       setToast(t.toastError);
+      notificationService.notifyInvoice(
+        isRtl ? 'فشل إلغاء الفاتورة' : 'Invoice cancellation failed',
+        isRtl ? `تعذر إلغاء الفاتورة ${inv.invoiceNumber}.` : `The invoice ${inv.invoiceNumber} could not be cancelled.`,
+        'error',
+        '/invoices'
+      );
     } finally {
       setUpdatingId(null);
     }
@@ -478,9 +491,21 @@ export default function Invoices() {
       await updateInvoiceStatus(inv.id, 'غير مدفوعة');
       applyStatusLocally(inv.id, 'غير مدفوعة');
       setToast(t.toastReturned(inv.invoiceNumber));
+      notificationService.notifyInvoice(
+        isRtl ? 'تم تسجيل مرتجع' : 'Return recorded',
+        isRtl ? `تم تسجيل مرتجع على الفاتورة ${inv.invoiceNumber}.` : `A return was recorded for invoice ${inv.invoiceNumber}.`,
+        'info',
+        '/invoices'
+      );
     } catch (err) {
       console.error(`❌ خطأ أثناء تسجيل مرتجع للفاتورة رقم ${inv.id}:`, err);
       setToast(t.toastError);
+      notificationService.notifyInvoice(
+        isRtl ? 'فشل تسجيل المرتجع' : 'Return registration failed',
+        isRtl ? `تعذر تسجيل المرتجع للفاتورة ${inv.invoiceNumber}.` : `A return could not be registered for invoice ${inv.invoiceNumber}.`,
+        'error',
+        '/invoices'
+      );
     } finally {
       setUpdatingId(null);
     }

@@ -5,7 +5,8 @@ import {
   AlertTriangle, XCircle, Plus, Minus, Edit, History, 
   X, CheckCircle, BarChart3
 } from 'lucide-react';
-import { inventoryService } from '../services/inventoryService';
+import { inventoryService, type InventoryItem } from '../services/inventoryService';
+import { notificationService } from '../services/notification.service';
 import { useOrganization } from '../contexts/OrganizationContext';
 
 // ================= Layout Context =================
@@ -136,27 +137,7 @@ const translations = {
 } as const;
 
 // ================= Types =================
-interface StockMovement {
-  id: string;
-  date: string;
-  type: 'add' | 'subtract' | 'set';
-  quantity: number;
-  user: LocalizedText;
-  reason: LocalizedText;
-}
-
-interface ProductInventory {
-  id: string;
-  image: string;
-  name: LocalizedText;
-  sku: string;
-  category: LocalizedText;
-  currentQty: number;
-  minQty: number;
-  lastMovement: string;
-  lastUpdate: string;
-  history: StockMovement[];
-}
+type ProductInventory = InventoryItem;
 
 export default function InventoryManagement() {
   const { isRtl } = useOutletContext<DashboardContext>();
@@ -269,9 +250,23 @@ export default function InventoryManagement() {
       setAdjustQty(0);
       setAdjustReason('');
       showToast(t.toastUpdated);
+      notificationService.notifyInventory(
+        isRtl ? 'تم تحديث المخزون' : 'Inventory updated',
+        isRtl
+          ? `تم تعديل مخزون ${selectedProduct.name.ar ?? selectedProduct.name.en ?? 'المنتج'} بنجاح.`
+          : `Inventory for ${selectedProduct.name.en ?? selectedProduct.name.ar ?? 'the item'} was updated successfully.`,
+        'success',
+        '/inventory'
+      );
     } catch (error) {
       console.error('Error updating stock:', error);
       alert('حدث خطأ أثناء تحديث المخزون في السيرفر');
+      notificationService.notifyInventory(
+        isRtl ? 'فشل تحديث المخزون' : 'Inventory update failed',
+        isRtl ? 'حدث خطأ أثناء تحديث المخزون في السيرفر.' : 'The inventory update failed on the server.',
+        'error',
+        '/inventory'
+      );
     }
   };
   
@@ -291,6 +286,12 @@ export default function InventoryManagement() {
       // 2. جلب الحركات الحقيقية من الباك إند للمستودع الافتراضي (1)
       if (!organization?.warehouseId) {
         showToast(isRtl ? 'لم يتم تحديد المستودع للمستخدم الحالي.' : 'No warehouse is assigned to the current user.');
+        notificationService.notifyInventory(
+          isRtl ? 'المستودع غير محدد' : 'Warehouse not selected',
+          isRtl ? 'لم يتم تحديد المستودع للمستخدم الحالي.' : 'No warehouse is assigned to the current user.',
+          'warning',
+          '/inventory'
+        );
         return;
       }
       const historyData = await inventoryService.getProductMovements(product.id, organization.warehouseId);

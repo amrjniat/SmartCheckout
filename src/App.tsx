@@ -40,6 +40,7 @@ import NotificationsPage from './pages/Notifications';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'react-hot-toast'; 
 import sessionService from './services/sessionService';
+import { ROUTES } from './constants/routes';
 function App() {
   useEffect(() => {
     const token = sessionService.getToken();
@@ -49,81 +50,75 @@ function App() {
   }, []);
   return (
     <BrowserRouter basename="/SmartCheckout">
-       <Toaster position="top-center" /> 
+       <Toaster
+         position="top-center"
+         toastOptions={{
+           duration: 4000,
+           style: {
+             borderRadius: '14px',
+             background: '#0f172a',
+             color: '#fff',
+             fontSize: '14px',
+             fontWeight: 600,
+             boxShadow: '0 10px 25px rgba(15, 23, 42, 0.18)',
+           },
+           success: {
+             style: {
+               background: '#10b981',
+             },
+           },
+           error: {
+             style: {
+               background: '#ef4444',
+             },
+           },
+         }}
+       />
       <Routes>
         {/* الصفحات الخارجية المستقلة */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
+        <Route path={ROUTES.login} element={<Login />} />
+        <Route path={ROUTES.signup} element={<SignUp />} />
 
         {/* --- نظام الإدارة العام (محمي: Admin فقط) --- */}
         <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
           <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/invoices" element={<InvoicesPage />} />
-            <Route path="/products" element={<ProductsManagementPage />} />
-
-            {/* مسار إدارة المخزون متاح للمدير ضمن لوحة التحكم العامة */}
-            <Route path="/inventory" element={<InventoryManagement />} />
-
-            {/* مسار إدارة الموردين متاح للمدير ضمن لوحة التحكم العامة */}
-            <Route path="/suppliers" element={<SuppliersPage />} />
-
-            {/* مسار تقارير المخزون متاح للمدير ضمن لوحة التحكم العامة */}
-            <Route path="/reports" element={<InventoryReports />} />
-            <Route path="/pos" element={<QuickSalePage />} />
-            {/* نفس لوحة الكاشير، بس بهيدر الإدارة العامة (يشوفها المدير من لوحته) */}
+            <Route path={ROUTES.dashboard} element={<Dashboard />} />
+            <Route path={ROUTES.invoices} element={<InvoicesPage />} />
+            <Route path={ROUTES.products} element={<ProductsManagementPage />} />
+            <Route path={ROUTES.inventory} element={<InventoryManagement />} />
+            <Route path={ROUTES.suppliers} element={<SuppliersPage />} />
+            <Route path={ROUTES.reports} element={<InventoryReports />} />
+            <Route path={ROUTES.pos} element={<QuickSalePage />} />
             <Route path="/dashboard/cashier" element={<CashierDashboard />} />
-
-            <Route path="/clients" element={<ClientsPage />} />
-            <Route path="/team" element={<EmployeeManagement />} />
-
-            {/* مسار الإعدادات العامة، متاح للمدير فقط ضمن لوحة التحكم العامة */}
-            <Route path="/settings" element={<GeneralSettings />} />
-
-            {/* مسار صفحة الإشعارات، متاح للمدير ضمن لوحة التحكم العامة */}
-            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path={ROUTES.clients} element={<ClientsPage />} />
+            <Route path={ROUTES.team} element={<EmployeeManagement />} />
+            <Route path={ROUTES.settings} element={<GeneralSettings />} />
+            <Route path={ROUTES.notifications} element={<NotificationsPage />} />
           </Route>
         </Route>
 
         {/* --- نظام الكاشير المستقل (محمي: Cashier فقط) --- */}
         <Route element={<ProtectedRoute allowedRoles={['Cashier']} />}>
           <Route element={<CashierLayout />}>
-            <Route path="/cashier" element={<CashierDashboard />} />
-            <Route path="/cashier/pos" element={<QuickSalePage />} />
-
-            {/* نفس صفحة الفواتير، بس بهيدر الكاشير */}
-            <Route path="/cashier/invoices" element={<InvoicesPage />} />
-
-            <Route path="/cashier/clients" element={<ClientsPage />} />
-
-            {/* نفس صفحة الإشعارات، بس بهيدر الكاشير */}
-            <Route path="/cashier/notifications" element={<NotificationsPage />} />
+            <Route path={ROUTES.cashier} element={<CashierDashboard />} />
+            <Route path={ROUTES.cashierPos} element={<QuickSalePage />} />
+            <Route path={ROUTES.cashierInvoices} element={<InvoicesPage />} />
+            <Route path={ROUTES.cashierClients} element={<ClientsPage />} />
+            <Route path={ROUTES.cashierNotifications} element={<NotificationsPage />} />
           </Route>
         </Route>
 
         {/* --- نظام المستودع المستقل (محمي: Warehouse فقط) --- */}
         <Route element={<ProtectedRoute allowedRoles={['Warehouse']} />}>
           <Route element={<WarehouseLayout />}>
-            <Route path="/warehouse" element={<WarehouseDashboard />} />
-
-            {/* نفس صفحة المواد والمنتجات، بس بهيدر المستودع (لأمين المستودع) */}
-            <Route path="/warehouse/products" element={<ProductsManagementPage />} />
-
-            {/* مسار إدارة المخزون متاح لأمين المستودع ضمن لوحة المستودع */}
-            <Route path="/warehouse/inventory" element={<InventoryManagement />} />
-
-            {/* نفس صفحة الموردين، بس بهيدر المستودع (لأمين المستودع) */}
-            <Route path="/warehouse/suppliers" element={<SuppliersPage />} />
-
-            {/* نفس صفحة تقارير المخزون، بس بهيدر المستودع (لأمين المستودع) */}
-            <Route path="/warehouse/reports" element={<InventoryReports />} />
-
-            {/* نفس صفحة الفواتير، بس بهيدر المستودع (لأمين المستودع) */}
-            <Route path="/warehouse/invoices" element={<InvoicesPage />} />
-
-            {/* نفس صفحة الإشعارات، بس بهيدر المستودع (لأمين المستودع) */}
-            <Route path="/warehouse/notifications" element={<NotificationsPage />} />
+            <Route path={ROUTES.warehouse} element={<WarehouseDashboard />} />
+            <Route path={ROUTES.warehouseProducts} element={<ProductsManagementPage />} />
+            <Route path={ROUTES.warehouseInventory} element={<InventoryManagement />} />
+            <Route path={ROUTES.warehouseSuppliers} element={<SuppliersPage />} />
+            <Route path={ROUTES.warehouseReports} element={<InventoryReports />} />
+            <Route path={ROUTES.warehouseInvoices} element={<InvoicesPage />} />
+            <Route path={ROUTES.warehouseNotifications} element={<NotificationsPage />} />
           </Route>
         </Route>
 

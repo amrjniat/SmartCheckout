@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header, { type MenuItem, type TimeFilter } from '../components/layout/header2';
 import { type PageHeaderData } from './DashboardLayout';
 import { logout } from '../services/authService';
+import { ROUTES } from '../constants/routes';
 const defaultWarehouseData = {
   userName: 'عمرو جنيات',
   userTitle: 'الكاشير (المحاسب)',
@@ -20,7 +21,7 @@ export default function WarehouseLayout() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login', { replace: true });
+    navigate(ROUTES.login, { replace: true });
   };
 
   // ✅ إعادة تعيين showHeader عند تغيير المسار لضمان ظهور الشريط افتراضياً
@@ -42,10 +43,10 @@ const t = {
     subtitle: headerData.subtitle || (isRtl ? 'النظام المتخصص بمراقبة وحركة المخزون' : 'Specialized Inventory System'),
   };
 const defaultMenuItems: MenuItem[] = [
-    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: '/cashier' },
-    { id: 'pos', text: isRtl ? 'شاشة البيع السريع (POS)' : 'Quick Sale Screen (POS)', path: '/cashier/pos' },
-    { id: 'sales', text: isRtl ? 'الفواتير والمبيعات' : 'Sales & Invoices', path: '/cashier/invoices' },
-      { id: 'clients', text: isRtl ? 'إدارة العملاء' : 'Client Management', path: '/cashier/clients' },
+    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: ROUTES.cashier },
+    { id: 'pos', text: isRtl ? 'شاشة البيع السريع (POS)' : 'Quick Sale Screen (POS)', path: ROUTES.cashierPos },
+    { id: 'sales', text: isRtl ? 'الفواتير والمبيعات' : 'Sales & Invoices', path: ROUTES.cashierInvoices },
+    { id: 'clients', text: isRtl ? 'إدارة العملاء' : 'Client Management', path: ROUTES.cashierClients },
 ].map((item) => ({
     ...item,
     // تفعيل الزر برمجياً بناءً على المسار الحالي لتجنب أي مشاكل في إضاءة الزر

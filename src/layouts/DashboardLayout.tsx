@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header, { type MenuItem, type TimeFilter } from '../components/layout/Header';
 import { logout } from '../services/authService';
+import { ROUTES } from '../constants/routes';
 
 // Default admin user data
 const defaultAdminData = {
@@ -37,7 +38,7 @@ export default function DashboardLayout() {
 
  const handleLogout = async () => {
     await logout();
-    navigate('/login', { replace: true });
+    navigate(ROUTES.login, { replace: true });
   };
   // ✅ إعادة تعيين showHeader عند تغيير المسار لضمان ظهور الشريط افتراضياً
   useEffect(() => {
@@ -62,16 +63,16 @@ export default function DashboardLayout() {
 
   // Default menu items (admin)
   const defaultMenuItems: MenuItem[] = [
-    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: '/dashboard' },
-    { id: 'pos', text: isRtl ? 'شاشة البيع السريع (POS)' : 'Quick Sale Screen (POS)', path: '/pos' },
-    { id: 'products', text: isRtl ? 'إدارة المواد والمنتجات' : 'Products Management', path: '/products' },
-    { id: 'inventory', text: isRtl ? 'المخزون والمستودعات' : 'Inventory & Warehouses', path: '/inventory' },
-    { id: 'sales', text: isRtl ? 'الفواتير والمبيعات' : 'Sales & Invoices', path: '/invoices' },
-    { id: 'suppliers', text: isRtl ? 'الموردون' : 'Suppliers', path: '/Suppliers' },
-    { id: 'customers', text: isRtl ? 'إدارة العملاء والزبائن' : 'Customers & Clients', path: '/clients' },
-    { id: 'team', text: isRtl ? 'إدارة الفريق والموظفين' : 'Team & Employees', path: '/team' },
-    { id: 'reports', text: isRtl ? 'التقارير والتحليلات البيانية' : 'Reports & Analytics', path: '/reports' },
-    { id: 'settings', text: isRtl ? 'إعدادات النظام العامة' : 'General Settings', path: '/settings' },
+    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: ROUTES.dashboard },
+    { id: 'pos', text: isRtl ? 'شاشة البيع السريع (POS)' : 'Quick Sale Screen (POS)', path: ROUTES.pos },
+    { id: 'products', text: isRtl ? 'إدارة المواد والمنتجات' : 'Products Management', path: ROUTES.products },
+    { id: 'inventory', text: isRtl ? 'المخزون والمستودعات' : 'Inventory & Warehouses', path: ROUTES.inventory },
+    { id: 'sales', text: isRtl ? 'الفواتير والمبيعات' : 'Sales & Invoices', path: ROUTES.invoices },
+    { id: 'suppliers', text: isRtl ? 'الموردون' : 'Suppliers', path: ROUTES.suppliers },
+    { id: 'customers', text: isRtl ? 'إدارة العملاء والزبائن' : 'Customers & Clients', path: ROUTES.clients },
+    { id: 'team', text: isRtl ? 'إدارة الفريق والموظفين' : 'Team & Employees', path: ROUTES.team },
+    { id: 'reports', text: isRtl ? 'التقارير والتحليلات البيانية' : 'Reports & Analytics', path: ROUTES.reports },
+    { id: 'settings', text: isRtl ? 'إعدادات النظام العامة' : 'General Settings', path: ROUTES.settings },
   ].map((item) => ({
     ...item,
     active: item.path !== null && location.pathname === item.path,

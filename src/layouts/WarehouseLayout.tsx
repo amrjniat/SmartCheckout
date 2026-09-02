@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header, { type MenuItem, type TimeFilter } from '../components/layout/header2';
 import { type PageHeaderData } from './DashboardLayout';
 import { logout } from '../services/authService';
+import { ROUTES } from '../constants/routes';
 
 // بيانات افتراضية لأمين المستودع
 const defaultWarehouseData = {
@@ -22,7 +23,7 @@ export default function WarehouseLayout() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login', { replace: true });
+    navigate(ROUTES.login, { replace: true });
   };
 
   // ✅ إعادة تعيين showHeader عند تغيير المسار لضمان ظهور الشريط افتراضياً
@@ -47,11 +48,11 @@ export default function WarehouseLayout() {
 
   // 1. تحديد قائمة الأزرار الخاصة بالمستودع بشكل مستقل تماماً
   const defaultMenuItems: MenuItem[] = [
-    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: '/warehouse' },
-    { id: 'products', text: isRtl ? 'إدارة المواد والمنتجات' : 'Products Management', path: '/warehouse/products' },
-    { id: 'inventory', text: isRtl ? 'المخزون والمستودعات' : 'Inventory & Warehouses', path: '/warehouse/inventory' },
-    { id: 'suppliers', text: isRtl ? 'الموردون' : 'Team & Employees', path:  '/warehouse/Suppliers'},
-    { id: 'reports', text: isRtl ? ' التقارير والتحليلات البيانية للمخزون' : 'Reports & Analytics', path: '/warehouse/reports' },
+    { id: 'dash', text: isRtl ? 'الصفحه الرئيسيه' : 'Home page', path: ROUTES.warehouse },
+    { id: 'products', text: isRtl ? 'إدارة المواد والمنتجات' : 'Products Management', path: ROUTES.warehouseProducts },
+    { id: 'inventory', text: isRtl ? 'المخزون والمستودعات' : 'Inventory & Warehouses', path: ROUTES.warehouseInventory },
+    { id: 'suppliers', text: isRtl ? 'الموردون' : 'Suppliers', path: ROUTES.warehouseSuppliers },
+    { id: 'reports', text: isRtl ? 'التقارير والتحليلات البيانية للمخزون' : 'Reports & Analytics', path: ROUTES.warehouseReports },
   ].map((item) => ({
     ...item,
     // تفعيل الزر برمجياً بناءً على المسار الحالي لتجنب أي مشاكل في إضاءة الزر

@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import axiosInstance from '../services/axiosInstance';
 import { startSignalRConnection, onAnyDataChange } from '../services/signalRService';
+import { normalizeInvoiceStatus } from '../services/invoiceService';
 
 type LayoutContext = { isRtl: boolean; setIsRtl: (value: boolean) => void };
 type TimeFilter = 'day' | 'week' | 'month';
@@ -208,7 +209,7 @@ export default function Dashboard() {
           clientKey: inv.customerName,
           time: new Date(inv.invoiceDate).toLocaleTimeString(isRtl ? 'ar' : 'en', { hour: '2-digit', minute: '2-digit' }),
           total: Number(inv.totalAmount).toLocaleString(),
-          status: inv.status === 'مدفوعة' ? 'paid' : 'pending'
+          status: normalizeInvoiceStatus(inv.status) === 'مدفوعة' ? 'paid' : 'pending'
         }));
 
       // ✅ استخراج آمن لمصفوفة المنتجات الأكثر مبيعاً

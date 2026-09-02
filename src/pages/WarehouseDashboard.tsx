@@ -7,6 +7,8 @@ import AddProductModal from '../components/AddProductModal'; // عدّلوا ا�
 import RestockModal from '../components/RestockModal'; // عدّلوا المسار حسب مكان الملف الفعلي عندكم
 import { getTransactions } from '../services/transactionService';
 import type { InventoryTransaction } from '../services/transactionService';
+import { useOrganization } from '../contexts/OrganizationContext';
+import { getCurrentWarehouseId } from '../services/tokenUtils';
 
 interface OutletContextType {
   isRtl: boolean;
@@ -15,6 +17,8 @@ interface OutletContextType {
 
 export default function WarehouseDashboard() {
   const { isRtl } = useOutletContext<OutletContextType>();
+  const organization = useOrganization();
+  const warehouseId = organization?.warehouseId ?? getCurrentWarehouseId() ?? undefined;
   const [activeCard, setActiveCard] = useState<string | null>(null);
 
   // حالات المنتجات والحركات
@@ -67,7 +71,7 @@ export default function WarehouseDashboard() {
   }, [fetchDashboardData]);
 
   const totalItemsCount = products.length;
-  const lowStockCount = products.filter(p => p.stockQuantity < 10).length;
+  const lowStockCount = products.filter((p) => Number(p.stockQuantity ?? 0) < 10).length;
   const inboundCount = transactionsData.filter(tx => tx.type === 'in').length;
   const outboundCount = transactionsData.filter(tx => tx.type === 'out').length;
 
@@ -75,9 +79,9 @@ export default function WarehouseDashboard() {
   const calculateCategories = () => {
     if (products.length === 0) return [];
     
-    const counts: { [key: string]: number } = {};
-    products.forEach(p => {
-      const cat = p.category || (isRtl ? 'أخرى' : 'Other');
+    const counts: Record<string, number> = {};
+    products.forEach((p) => {
+      const cat = typeof p.category === 'string' ? p.category : p.category?.categoryName || (isRtl ? 'أخرى' : 'Other');
       counts[cat] = (counts[cat] || 0) + 1;
     });
 
@@ -376,6 +380,7 @@ export default function WarehouseDashboard() {
         isOpen={isRestockModalOpen}
         onClose={() => setIsRestockModalOpen(false)}
         onSuccess={fetchDashboardData}
+        warehouseId={warehouseId}
       />
     </div>
   );

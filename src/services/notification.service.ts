@@ -82,8 +82,14 @@
 
 
 
+import toast from 'react-hot-toast';
 import axiosInstance from '../services/axiosInstance';
-import type { Notification, NotificationType, NotificationModule } from '../types/Notification';
+import type {
+  Notification,
+  NotificationType,
+  NotificationModule,
+  NotificationPayload,
+} from '../types/Notification';
 
 type Listener = (notifications: Notification[]) => void;
 
@@ -107,6 +113,8 @@ interface NotificationsResponse {
   notifications: BackendNotification[];
 }
 
+const MAX_NOTIFICATIONS = 200;
+
 class NotificationService {
   private listeners: Listener[] = [];
   private notifications: Notification[] = [];
@@ -121,20 +129,121 @@ class NotificationService {
       isRead: n.isRead,
       createdAt: n.createdAt,
       actionUrl: n.redirectUrl ?? undefined,
+      source: 'api',
     };
   }
 
   private notify() {
-    this.listeners.forEach((listener) => listener(this.notifications));
+    this.listeners.forEach((listener) => listener([...this.notifications]));
+  }
+
+  private getToastTheme(type: NotificationType) {
+    switch (type) {
+      case 'success':
+        return 'bg-emerald-500 text-white';
+      case 'warning':
+        return 'bg-amber-500 text-white';
+      case 'error':
+        return 'bg-red-500 text-white';
+      case 'info':
+      default:
+        return 'bg-sky-500 text-white';
+    }
+  }
+
+  private triggerToast(notification: Notification) {
+    const text = `${notification.title} • ${notification.message}`;
+
+    switch (notification.type) {
+      case 'success':
+        toast.success(text, { id: notification.id, duration: 4000 });
+        break;
+      case 'warning':
+        toast(text, {
+          id: notification.id,
+          duration: 4500,
+          className: this.getToastTheme('warning'),
+        });
+        break;
+      case 'error':
+        toast.error(text, { id: notification.id, duration: 5000 });
+        break;
+      case 'info':
+      default:
+        toast(text, {
+          id: notification.id,
+          duration: 4000,
+          className: this.getToastTheme('info'),
+        });
+        break;
+    }
   }
 
   subscribe(listener: Listener): () => void {
     this.listeners.push(listener);
-    listener(this.notifications);
-    this.fetchNotifications();
+    listener([...this.notifications]);
+    void this.fetchNotifications();
     return () => {
       this.listeners = this.listeners.filter((l) => l !== listener);
     };
+  }
+
+  getNotifications(): Notification[] {
+    return [...this.notifications];
+  }
+
+  getUnreadCount(): number {
+    return this.notifications.filter((n) => !n.isRead).length;
+  }
+
+  addNotification(payload: NotificationPayload): Notification {
+    const notification: Notification = {
+      id: payload.createdAt ? `${Date.now()}-${Math.random().toString(16).slice(2)}` : crypto.randomUUID(),
+      title: payload.title,
+      message: payload.message,
+      type: payload.type ?? 'info',
+      module: payload.module ?? 'general',
+      isRead: false,
+      createdAt: payload.createdAt ?? new Date().toISOString(),
+      actionUrl: payload.actionUrl,
+      source: payload.source ?? 'local',
+    };
+
+    this.notifications = [notification, ...this.notifications]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, MAX_NOTIFICATIONS);
+
+    this.notify();
+    this.triggerToast(notification);
+    return notification;
+  }
+
+  notifyAction(payload: NotificationPayload): Notification {
+    return this.addNotification(payload);
+  }
+
+  notifySales(title: string, message: string, type: NotificationType = 'info', actionUrl?: string): Notification {
+    return this.notifyAction({ title, message, type, module: 'sales', actionUrl, source: 'local' });
+  }
+
+  notifyInventory(title: string, message: string, type: NotificationType = 'info', actionUrl?: string): Notification {
+    return this.notifyAction({ title, message, type, module: 'inventory', actionUrl, source: 'local' });
+  }
+
+  notifyClient(title: string, message: string, type: NotificationType = 'info', actionUrl?: string): Notification {
+    return this.notifyAction({ title, message, type, module: 'clients', actionUrl, source: 'local' });
+  }
+
+  notifySupplier(title: string, message: string, type: NotificationType = 'info', actionUrl?: string): Notification {
+    return this.notifyAction({ title, message, type, module: 'suppliers', actionUrl, source: 'local' });
+  }
+
+  notifyInvoice(title: string, message: string, type: NotificationType = 'info', actionUrl?: string): Notification {
+    return this.notifyAction({ title, message, type, module: 'invoices', actionUrl, source: 'local' });
+  }
+
+  notifySystem(title: string, message: string, type: NotificationType = 'info', actionUrl?: string): Notification {
+    return this.notifyAction({ title, message, type, module: 'general', actionUrl, source: 'system' });
   }
 
   async fetchNotifications(): Promise<void> {
@@ -142,42 +251,45 @@ class NotificationService {
       const response = await axiosInstance.get<NotificationsResponse>('/notifications', {
         params: { pageSize: 100 },
       });
-      this.notifications = response.data.notifications
+      const fetched = response.data.notifications
         .map((n) => this.mapNotification(n))
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      this.notifications = fetched.length > 0 ? fetched : this.notifications;
       this.notify();
     } catch (error) {
       console.error('فشل تحميل الإشعارات:', error);
     }
   }
 
-  getNotifications(): Notification[] {
-    return this.notifications;
-  }
-
-  getUnreadCount(): number {
-    return this.notifications.filter((n) => !n.isRead).length;
+  private setReadState(id: string, isRead: boolean): void {
+    this.notifications = this.notifications.map((n) =>
+      n.id === id ? { ...n, isRead } : n
+    );
+    this.notify();
   }
 
   async markAsRead(id: string): Promise<void> {
+    const normalizedId = String(id);
+    this.setReadState(normalizedId, true);
+
     try {
-      await axiosInstance.put(`/notifications/${id}/read`);
-      this.notifications = this.notifications.map((n) =>
-        n.id === id ? { ...n, isRead: true } : n
-      );
-      this.notify();
+      await axiosInstance.put(`/notifications/${normalizedId}/read`);
     } catch (error) {
-      console.error('فشل تعليم الإشعار كمقروء:', error);
+      console.warn('فشل مزامنة تعليم الإشعار كمقروء في الـ backend، لكن حالة الواجهة تم تحديثها محليًا:', error);
     }
   }
 
   async markAllAsRead(): Promise<void> {
+    if (this.notifications.length === 0) return;
+
+    this.notifications = this.notifications.map((n) => ({ ...n, isRead: true }));
+    this.notify();
+
     try {
       await axiosInstance.put('/notifications/read-all');
-      this.notifications = this.notifications.map((n) => ({ ...n, isRead: true }));
-      this.notify();
     } catch (error) {
-      console.error('فشل تعليم جميع الإشعارات كمقروءة:', error);
+      console.warn('فشل مزامنة تعليم جميع الإشعارات كمقروءة في الـ backend، لكن الواجهة تم تحديثها محليًا:', error);
     }
   }
 

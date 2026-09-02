@@ -9,29 +9,52 @@ function notifySessionChanged(): void {
   window.dispatchEvent(new Event('pos-session-changed'));
 }
 
+function readLegacyStorageValue(storage: Storage, key: string): string | null {
+  return storage.getItem(key);
+}
+
 export const sessionService = {
   getToken(): string | null {
-    return sessionStorage.getItem(TOKEN_KEY);
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    if (token) return token;
+
+    const legacyToken = readLegacyStorageValue(localStorage, TOKEN_KEY);
+    if (legacyToken) {
+      sessionStorage.setItem(TOKEN_KEY, legacyToken);
+      localStorage.removeItem(TOKEN_KEY);
+    }
+
+    return legacyToken;
   },
 
   setToken(token: string): void {
     sessionStorage.setItem(TOKEN_KEY, token);
+    localStorage.removeItem(TOKEN_KEY);
     notifySessionChanged();
   },
 
   getUser<T extends StoredUser = StoredUser>(): T | null {
-    const rawUser = sessionStorage.getItem(USER_KEY);
+    const rawUser = sessionStorage.getItem(USER_KEY) ?? localStorage.getItem(USER_KEY);
     if (!rawUser) return null;
 
     try {
-      return JSON.parse(rawUser) as T;
+      const parsed = JSON.parse(rawUser) as T;
+      if (sessionStorage.getItem(USER_KEY) !== rawUser) {
+        sessionStorage.setItem(USER_KEY, rawUser);
+        localStorage.removeItem(USER_KEY);
+      }
+      return parsed;
     } catch {
+      sessionStorage.removeItem(USER_KEY);
+      localStorage.removeItem(USER_KEY);
       return null;
     }
   },
 
   setUser(user: StoredUser): void {
-    sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+    const value = JSON.stringify(user);
+    sessionStorage.setItem(USER_KEY, value);
+    localStorage.removeItem(USER_KEY);
     notifySessionChanged();
   },
 

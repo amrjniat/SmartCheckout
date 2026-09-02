@@ -7,6 +7,8 @@ export type NotificationModule =
   | 'invoices'
   | 'general';
 
+export type NotificationSource = 'local' | 'api' | 'signalr' | 'system';
+
 export interface Notification {
   id: string;
   title: string;
@@ -16,4 +18,15 @@ export interface Notification {
   isRead: boolean;
   createdAt: string; // ISO date string
   actionUrl?: string;
+  source?: NotificationSource;
+}
+
+export interface NotificationPayload {
+  title: string;
+  message: string;
+  type?: NotificationType;
+  module?: NotificationModule;
+  actionUrl?: string;
+  source?: NotificationSource;
+  createdAt?: string;
 }

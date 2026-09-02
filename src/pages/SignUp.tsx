@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { ROUTES } from '../constants/routes';
 // @ts-ignore
 import logoImage from '../assets/photo_2026-07-02_23-29-04.jpg';
 // import logoImage from '../assets/photo_2026-07-02_23-29-04.jpg';
@@ -257,7 +258,7 @@ const roleMap: Record<string, number> = {
 
       // 3. إظهار رسالة النجاح والتوجيه لصفحة تسجيل الدخول
       toast.success(t.successMsg);
-      navigate('/login');
+      navigate(ROUTES.login);
     } catch (error: any) {
       console.error("Register Error:", error);
       // إظهار رسالة الخطأ القادمة من السيرفر إذا وجدت، وإلا الرسالة الافتراضية

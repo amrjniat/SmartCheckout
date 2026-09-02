@@ -9,6 +9,7 @@ import {
 
 import { getSuppliers, addSupplier, updateSupplier, deleteSupplier } from '../services/supplierService';
 import type { Supplier } from '../services/supplierService';
+import { notificationService } from '../services/notification.service';
 
 export interface ExtendedSupplier extends Partial<Supplier> {
   id: string | number;
@@ -241,8 +242,20 @@ export default function SuppliersPage() {
 
       if (modalMode === 'add') {
         await addSupplier(payload);
+        notificationService.notifySupplier(
+          isRtl ? 'تمت إضافة مورد جديد' : 'Supplier added',
+          isRtl ? `تمت إضافة المورد ${payload.nameAr || payload.nameEn} بنجاح.` : `Supplier ${payload.nameEn || payload.nameAr} was added successfully.`,
+          'success',
+          '/suppliers'
+        );
       } else if (modalMode === 'edit' && editingId !== null) {
         await updateSupplier(editingId, payload);
+        notificationService.notifySupplier(
+          isRtl ? 'تم تحديث المورد' : 'Supplier updated',
+          isRtl ? `تم تحديث بيانات المورد ${payload.nameAr || payload.nameEn} بنجاح.` : `Supplier ${payload.nameEn || payload.nameAr} was updated successfully.`,
+          'info',
+          '/suppliers'
+        );
       }
 
       await loadSuppliers();
@@ -252,6 +265,14 @@ export default function SuppliersPage() {
     } catch (error) {
       console.error(`Error ${modalMode === 'add' ? 'adding' : 'updating'} supplier:`, error);
       setActionError(modalMode === 'add' ? 'تعذر إضافة المورد. تحقق من بيانات الإدخال أو اتصال الخادم.' : 'تعذر تحديث المورد. تحقق من البيانات أو اتصال الخادم.');
+      notificationService.notifySupplier(
+        isRtl ? 'فشل في حفظ المورد' : 'Supplier save failed',
+        modalMode === 'add'
+          ? (isRtl ? 'تعذر إضافة المورد. تحقق من بيانات الإدخال.' : 'The supplier could not be added. Please check your input.')
+          : (isRtl ? 'تعذر تحديث المورد. تحقق من البيانات.' : 'The supplier could not be updated. Please check the data.'),
+        'error',
+        '/suppliers'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -265,10 +286,22 @@ export default function SuppliersPage() {
 
     try {
       await deleteSupplier(supplier.id);
+      notificationService.notifySupplier(
+        isRtl ? 'تم حذف المورد' : 'Supplier deleted',
+        isRtl ? `تم حذف المورد ${supplier.nameAr || supplier.nameEn} بنجاح.` : `Supplier ${supplier.nameEn || supplier.nameAr} was deleted successfully.`,
+        'warning',
+        '/suppliers'
+      );
       await loadSuppliers();
     } catch (error) {
       console.error('Error deleting supplier:', error);
       setActionError('تعذر حذف المورد من قاعدة البيانات. تأكد من أن الباك-إند يدعم الحذف النهائي لهذا المورد.');
+      notificationService.notifySupplier(
+        isRtl ? 'فشل حذف المورد' : 'Supplier delete failed',
+        isRtl ? 'تعذر حذف المورد من قاعدة البيانات.' : 'The supplier could not be deleted from the database.',
+        'error',
+        '/suppliers'
+      );
     }
   };
 

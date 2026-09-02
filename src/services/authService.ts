@@ -20,9 +20,6 @@ export const login = async (username: string, password: string) => {
       password,
     });
 
-    // 1. التأكد من وجود التوكن وحفظه في sessionStorage
-    // ✅ تصحيح: الرجوع لاستخدام sessionStorage (بدل localStorage) لعزل التبويبات حسب الدور
-    // ملاحظة: axiosInstance.ts و signalRService.ts يجب تعديلهما بنفس الطريقة ليطابقا هذا الملف
     if (response.data?.token) {
       sessionService.clear();
       sessionService.setToken(response.data.token);
