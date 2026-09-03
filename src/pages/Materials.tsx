@@ -8,7 +8,7 @@ import { ROUTES } from '../constants/routes';
 interface DashboardContext {
   isRtl: boolean;
   setIsRtl: React.Dispatch<React.SetStateAction<boolean>>;
-  setPageData: React.Dispatch<React.SetStateAction<any>>;
+  setPageData: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
 }
 
 // ==========================================
@@ -46,6 +46,14 @@ interface UnitOption {
   id: number;
   unitName: string;
 }
+
+type ApiProduct = Record<string, unknown>;
+
+const readText = (value: unknown, fallback = ''): string =>
+  typeof value === 'string' ? value : fallback;
+
+const readObject = (value: unknown): ApiProduct =>
+  value && typeof value === 'object' ? value as ApiProduct : {};
 
 export default function ProductsManagementPage() {
   // ==========================================
@@ -102,7 +110,7 @@ export default function ProductsManagementPage() {
   // 3. التأثيرات الحركية والتحميل (Effects)
   // ==========================================
   useEffect(() => {
-    axiosInstance.get('http://localhost:5157/api/Units')
+    axiosInstance.get<UnitOption[]>('/Units')
       .then((response) => {
         setUnits(response.data);
       })
@@ -114,35 +122,43 @@ export default function ProductsManagementPage() {
   // ✅ جلب المنتجات الحقيقية من قاعدة البيانات وربطها بشكل الـ Product المحلي
   useEffect(() => {
     setIsLoading(true);
-    axiosInstance.get('/Products')
+    axiosInstance.get<ApiProduct[]>('/Products')
       .then((response) => {
-        const mappedProducts: Product[] = response.data.map((apiProduct: any) => {
-          const totalQuantity = Array.isArray(apiProduct.productWarehouses)
-            ? apiProduct.productWarehouses.reduce((sum: number, wh: any) => sum + (wh?.quantity ?? 0), 0)
+        const mappedProducts: Product[] = response.data.map((apiProduct) => {
+          const productWarehouses = Array.isArray(apiProduct.productWarehouses)
+            ? apiProduct.productWarehouses.filter((warehouse): warehouse is Record<string, unknown> => Boolean(warehouse && typeof warehouse === 'object'))
+            : [];
+          const totalQuantity = productWarehouses.length > 0
+            ? productWarehouses.reduce((sum, wh) => sum + Number(wh.quantity ?? 0), 0)
             : 0;
 
           const minLimit = apiProduct.minStock ?? 0;
+          const category = readObject(apiProduct.category);
+          const supplier = readObject(apiProduct.supplier);
+          const unit = readObject(apiProduct.unit);
+          const updatedAt = readText(apiProduct.updatedAt);
+          const createdAt = readText(apiProduct.createdAt);
           const status: Product['status'] =
-            totalQuantity === 0 ? 'out' : totalQuantity <= minLimit ? 'low' : 'available';
+            totalQuantity === 0 ? 'out' : totalQuantity <= Number(minLimit) ? 'low' : 'available';
 
           return {
             id: String(apiProduct.id),
-            name: apiProduct.productName ?? '',
-            sku: apiProduct.sku ?? apiProduct.productCode ?? '',
-            barcode: apiProduct.barcode ?? '',
-            category: apiProduct.category?.categoryName ?? 'غير محدد',
-            purchasePrice: apiProduct.purchasePrice ?? 0,
-            sellingPrice: apiProduct.sellingPrice ?? 0,
+            name: readText(apiProduct.productName),
+            sku: readText(apiProduct.sku ?? apiProduct.productCode),
+            barcode: readText(apiProduct.barcode),
+            category: readText(category.categoryName, 'غير محدد'),
+            purchasePrice: Number(apiProduct.purchasePrice ?? 0),
+            sellingPrice: Number(apiProduct.sellingPrice ?? 0),
             quantity: totalQuantity,
-            minLimit: minLimit,
+            minLimit: Number(minLimit),
             status: status,
-            supplier: apiProduct.supplier?.supplierName ?? 'غير محدد',
-            unit: apiProduct.unit?.unitName ?? '',
-            description: apiProduct.description ?? '',
+            supplier: readText(supplier.supplierName, 'غير محدد'),
+            unit: readText(unit.unitName),
+            description: readText(apiProduct.description),
             image: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=150&auto=format&fit=crop&q=60',
-            lastMovement: apiProduct.updatedAt
-              ? `آخر تحديث - ${new Date(apiProduct.updatedAt).toLocaleDateString('ar-EG')}`
-              : `تم الإنشاء - ${new Date(apiProduct.createdAt).toLocaleDateString('ar-EG')}`,
+            lastMovement: updatedAt
+              ? `آخر تحديث - ${new Date(updatedAt).toLocaleDateString('ar-EG')}`
+              : `تم الإنشاء - ${createdAt ? new Date(createdAt).toLocaleDateString('ar-EG') : ''}`,
             turnoverRate: 'medium',
             isNew: false,
           };
@@ -752,18 +768,18 @@ export default function ProductsManagementPage() {
         onSuccess={(saved) => {
           const newProduct: Product = {
             id: String(saved.id ?? products.length + 1),
-            name: saved.productName ?? '',
-            sku: saved.productCode ?? '',
-            barcode: saved.barcode ?? '',
-            category: saved.categoryName ?? 'غير محدد',
-            purchasePrice: saved.purchasePrice ?? 0,
-            sellingPrice: saved.sellingPrice ?? 0,
-            quantity: saved.initialQuantity ?? 0,
-            minLimit: saved.minStock ?? 0,
+            name: readText(saved.productName),
+            sku: readText(saved.productCode),
+            barcode: readText(saved.barcode),
+            category: readText(saved.categoryName, 'غير محدد'),
+            purchasePrice: Number(saved.purchasePrice ?? 0),
+            sellingPrice: Number(saved.sellingPrice ?? 0),
+            quantity: Number(saved.initialQuantity ?? 0),
+            minLimit: Number(saved.minStock ?? 0),
             status: 'available',
-            supplier: saved.supplierName ?? 'غير محدد',
-            unit: saved.unitName ?? '',
-            description: saved.description ?? '',
+            supplier: readText(saved.supplierName, 'غير محدد'),
+            unit: readText(saved.unitName),
+            description: readText(saved.description),
             image: 'https://images.unsplash.com/photo-1546549032-9571cd6b27df?w=150&auto=format&fit=crop&q=60',
             lastMovement: 'إنشاء مادة جديدة - الآن',
             turnoverRate: 'medium',

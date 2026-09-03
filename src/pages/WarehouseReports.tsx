@@ -191,10 +191,10 @@ export default function InventoryReports() {
     ];
   }, [stats, language]);
 
-  const showToast = (msg: string) => {
+  function showToast(msg: string) {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
-  };
+  }
 
   const handleExport = (type: string) => {
     const suffix = t('exportStartedSuffix');

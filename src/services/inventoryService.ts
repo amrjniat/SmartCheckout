@@ -29,7 +29,17 @@ export interface StockMovement {
   reason: { ar: string; en: string };
 }
 
-const normalizeInventoryList = (payload: unknown): any[] => {
+type ApiRecord = Record<string, unknown>;
+
+function readString(value: unknown, fallback: string): string {
+  return typeof value === 'string' && value.trim() !== '' ? value : fallback;
+}
+
+function readMovementType(value: unknown): StockMovement['type'] {
+  return value === 'subtract' || value === 'set' ? value : 'add';
+}
+
+const normalizeInventoryList = (payload: unknown): ApiRecord[] => {
   if (Array.isArray(payload)) return payload;
   if (payload && typeof payload === 'object') {
     const record = payload as Record<string, unknown>;
@@ -45,25 +55,29 @@ export const inventoryService = {
     const response = await axiosInstance.get('/products');
     const rawData = normalizeInventoryList(response.data);
 
-    return rawData.map((p: any) => {
+    return rawData.map((p) => {
+      const productWarehouses = Array.isArray(p.productWarehouses)
+        ? p.productWarehouses.filter((warehouse): warehouse is ApiRecord => Boolean(warehouse && typeof warehouse === 'object'))
+        : [];
       const primaryWarehouse = Array.isArray(p.productWarehouses)
-        ? p.productWarehouses.find((w: any) => Number(w.warehouseId) === Number(warehouseId))
+        ? productWarehouses.find((w) => Number(w.warehouseId) === Number(warehouseId))
         : null;
       const currentQty = Number(primaryWarehouse?.quantity ?? p.stockQuantity ?? 0);
+      const category = p.category && typeof p.category === 'object' ? p.category as ApiRecord : null;
 
       return {
         id: String(p.id ?? p.productId ?? 'unknown'),
-        image: p.imageUrl || 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=100',
-        name: { ar: p.productName ?? p.name ?? 'منتج', en: p.productName ?? p.name ?? 'Product' },
-        sku: p.productCode || p.barcode || p.sku || `SKU-${p.id ?? p.productId ?? 'unknown'}`,
+        image: readString(p.imageUrl, 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=100'),
+        name: { ar: readString(p.productName ?? p.name, 'منتج'), en: readString(p.productName ?? p.name, 'Product') },
+        sku: readString(p.productCode ?? p.barcode ?? p.sku, `SKU-${p.id ?? p.productId ?? 'unknown'}`),
         category: {
-          ar: p.category?.categoryName || p.categoryName || 'عام',
-          en: p.category?.categoryName || p.categoryName || 'General',
+          ar: readString(category?.categoryName ?? p.categoryName, 'عام'),
+          en: readString(category?.categoryName ?? p.categoryName, 'General'),
         },
         currentQty,
         minQty: Number(p.minStock ?? 0),
         lastMovement: '0',
-        lastUpdate: p.updatedAt || p.createdAt || new Date().toISOString(),
+        lastUpdate: readString(p.updatedAt ?? p.createdAt, new Date().toISOString()),
         history: [],
       };
     });
@@ -90,13 +104,13 @@ export const inventoryService = {
     });
     const movements = normalizeInventoryList(response.data);
 
-    return movements.map((m: any) => ({
+    return movements.map((m) => ({
       id: String(m.id ?? `${productId}-${Date.now()}`),
-      date: new Date(m.date ?? Date.now()).toLocaleString('ar-EG'),
-      type: m.type,
+      date: new Date(typeof m.date === 'string' || typeof m.date === 'number' ? m.date : Date.now()).toLocaleString('ar-EG'),
+      type: readMovementType(m.type),
       quantity: Number(m.quantity ?? 0),
-      user: { ar: m.userName ?? 'مستخدم', en: m.userName ?? 'User' },
-      reason: { ar: m.reason || 'تعديل مخزون', en: m.reason || 'Stock adjustment' },
+      user: { ar: readString(m.userName, 'مستخدم'), en: readString(m.userName, 'User') },
+      reason: { ar: readString(m.reason, 'تعديل مخزون'), en: readString(m.reason, 'Stock adjustment') },
     }));
   },
 };

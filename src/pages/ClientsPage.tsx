@@ -195,12 +195,13 @@ export default function CustomersPage() {
       // إعادة تحميل القائمة والإحصائيات عشان العميل الجديد يظهر فورًا
       await loadCustomers(searchTerm);
       await loadStats();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const response = err && typeof err === 'object' && 'response' in err ? (err as { response?: { data?: { message?: string } } }).response : undefined;
       console.error('❌ فشل إضافة العميل:', err);
-      setAddError(err?.response?.data?.message || t.errorAdd);
+      setAddError(response?.data?.message || t.errorAdd);
       notificationService.notifyClient(
         isRTL ? 'فشل إضافة العميل' : 'Failed to add customer',
-        err?.response?.data?.message || (isRTL ? 'حدث خطأ أثناء إضافة العميل.' : 'An error occurred while adding the customer.'),
+        response?.data?.message || (isRTL ? 'حدث خطأ أثناء إضافة العميل.' : 'An error occurred while adding the customer.'),
         'error',
         '/clients'
       );

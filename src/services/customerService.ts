@@ -77,7 +77,6 @@ function mapCustomerFromApi(raw: ApiCustomerListItem): Customer {
   let status: Customer['status'] = 'Active';
   if (raw.status === 'جديد') status = 'New';
   else if (raw.status === 'غير نشط') status = 'Inactive';
-  else status = 'Active'; // "نشط" أو "مدين" (لأن مدين معناها نشط + عليه رصيد)
 
   return {
     id: raw.customerCode || `CUST-${raw.id}`,

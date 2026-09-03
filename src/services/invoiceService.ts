@@ -146,7 +146,15 @@ export interface InvoiceItemDetail {
   totalPrice: number;
   taxRate: number;
   taxAmount: number;
-  product: any; // كائن المنتج الكامل — يمكن تدقيقه لاحقاً حسب الحاجة الفعلية بالواجهة
+  product: { productName?: string };
+}
+
+interface InvoiceCustomer {
+  customerName?: string;
+}
+
+interface InvoiceUser {
+  fullName?: string;
 }
 
 export interface InvoiceDetail {
@@ -162,9 +170,9 @@ export interface InvoiceDetail {
   totalAmount: number;
   status: InvoiceStatus;
   notes: string | null;
-  customer: any; // كائن العميل الكامل
-  branch: any; // كائن الفرع الكامل
-  user: any; // كائن المستخدم — ⚠️ يحتوي passwordHash بالـ response الحالي من الباك إند، لا يُعرض بالواجهة
+  customer: InvoiceCustomer;
+  branch: Record<string, unknown>;
+  user: InvoiceUser;
   invoiceItems: InvoiceItemDetail[];
   isActive: boolean;
   createdAt: string;

@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-// @ts-ignore
 import logoImage from '../assets/photo_2026-07-02_23-29-04.jpg';
 import { login } from '../services/authService';
 
@@ -169,9 +168,10 @@ const onSubmit = async (data: LoginFormData) => {
       const userRole = response?.user?.role;
       const targetPath = roleRoutes[userRole] || '/dashboard';
       navigate(targetPath);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // عرض رسالة الخطأ التي تأتي من الباك إند إن وجدت
-      const errorMessage = error.response?.data?.message || t.genericError;
+      const response = error && typeof error === 'object' && 'response' in error ? (error as { response?: { data?: { message?: string } } }).response : undefined;
+      const errorMessage = response?.data?.message || t.genericError;
       toast.error(errorMessage);
     }
   };

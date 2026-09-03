@@ -130,11 +130,12 @@ const RestockModal: React.FC<RestockModalProps> = ({
       setQuantity('');
 
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const response = err && typeof err === 'object' && 'response' in err ? (err as { response?: { data?: { details?: string; message?: string } } }).response : undefined;
       const backendMessage =
-        err?.response?.data?.details || err?.response?.data?.message || 'حدث خطأ غير متوقع أثناء التحديث.';
+        response?.data?.details || response?.data?.message || 'حدث خطأ غير متوقع أثناء التحديث.';
       setErrorMessage(backendMessage);
-      console.error('فشل استلام البضاعة:', err?.response?.data || err);
+      console.error('فشل استلام البضاعة:', response?.data || err);
     } finally {
       setIsSaving(false);
     }

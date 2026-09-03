@@ -4,7 +4,6 @@ import * as z from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ROUTES } from '../constants/routes';
-// @ts-ignore
 import logoImage from '../assets/photo_2026-07-02_23-29-04.jpg';
 // import logoImage from '../assets/photo_2026-07-02_23-29-04.jpg';
 import { register as registerUser } from '../services/authService'; // تأكد من المسار حسب مجلداتك

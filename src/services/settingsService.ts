@@ -118,8 +118,7 @@ export const deleteLogo = async (): Promise<{ message: string }> => {
 // مثال: logoPath = "/images/logos/logo_xxx.png"
 // ============================================
 
-const API_BASE_URL =
-  (import.meta as any).env?.VITE_API_URL || 'http://localhost:5157/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5157/api';
 
 export const STATIC_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
 

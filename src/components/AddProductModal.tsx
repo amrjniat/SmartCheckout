@@ -41,7 +41,7 @@ interface AddProductModalProps {
   productId?: number; // مطلوب فقط في وضع edit
   initialData?: Partial<ProductFormData>;
   onClose: () => void;
-  onSuccess: (savedProduct: any) => void; // يُستدعى بعد نجاح الحفظ لتحديث القائمة في الصفحة الأب
+  onSuccess: (savedProduct: Record<string, unknown>) => void; // يُستدعى بعد نجاح الحفظ لتحديث القائمة في الصفحة الأب
 }
 
 const emptyForm: ProductFormData = {
@@ -158,12 +158,13 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
         initialQuantity: formData.initialQuantity,
       });
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // نعرض تفاصيل الخطأ القادمة من الباك إند مباشرة (حقل details الذي بنيناه سابقاً)
+      const response = err && typeof err === 'object' && 'response' in err ? (err as { response?: { data?: { details?: string; message?: string } } }).response : undefined;
       const backendMessage =
-        err?.response?.data?.details || err?.response?.data?.message || 'حدث خطأ غير متوقع أثناء الحفظ.';
+        response?.data?.details || response?.data?.message || 'حدث خطأ غير متوقع أثناء الحفظ.';
       setErrorMessage(backendMessage);
-      console.error('فشل حفظ المنتج:', err?.response?.data || err);
+      console.error('فشل حفظ المنتج:', response?.data || err);
     } finally {
       setIsSaving(false);
     }
