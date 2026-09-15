@@ -81,8 +81,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   useEffect(() => {
     if (!isOpen) return;
 
-    setErrorMessage(null);
-
     Promise.all([
       axiosInstance.get<UnitOption[]>('/Units'),
       axiosInstance.get<CategoryOption[]>('/Categories'),
@@ -104,6 +102,8 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     if (!isOpen) return;
 
     if (mode === 'edit' && initialData) {
+      // The form is intentionally synchronized when the modal receives a different product.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({ ...emptyForm, ...initialData });
     } else {
       setFormData(emptyForm);

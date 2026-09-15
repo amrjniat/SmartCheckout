@@ -465,7 +465,15 @@ export default function CustomersPage() {
 
 // ================= Sub Components =================
 
-const StatCard = ({ title, value, icon, currency = '', theme }: any) => {
+type StatCardProps = {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  currency?: string;
+  theme?: 'blue' | 'amber' | 'emerald' | 'indigo';
+};
+
+const StatCard = ({ title, value, icon, currency = '', theme = 'blue' }: StatCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const themes: Record<string, { bg: string; shadow: string }> = {
@@ -506,7 +514,7 @@ const StatCard = ({ title, value, icon, currency = '', theme }: any) => {
   );
 };
 
-const StatusBadge = ({ status, t }: { status: string, t: any }) => {
+const StatusBadge = ({ status, t }: { status: string; t: { active: string; new: string; inactive: string } }) => {
   switch(status) {
     case 'Active': return <span className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 w-fit"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> {t.active}</span>;
     case 'New': return <span className="bg-amber-500/10 text-amber-600 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 w-fit"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> {t.new}</span>;

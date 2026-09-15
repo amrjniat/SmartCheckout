@@ -258,11 +258,13 @@ const roleMap: Record<string, number> = {
       // 3. إظهار رسالة النجاح والتوجيه لصفحة تسجيل الدخول
       toast.success(t.successMsg);
       navigate(ROUTES.login);
-    } catch (error: any) {
-      console.error("Register Error:", error);
-      // إظهار رسالة الخطأ القادمة من السيرفر إذا وجدت، وإلا الرسالة الافتراضية
-      const serverMessage = error.response?.data?.message || t.errorMsg;
-      toast.error(serverMessage);
+    } catch (error: unknown) {
+      console.error('Register Error:', error);
+      const serverMessage =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message)
+          : undefined;
+      toast.error(serverMessage || t.errorMsg);
     }
   };
 

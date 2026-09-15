@@ -210,27 +210,37 @@ function firstNonEmptyString(...values: unknown[]): string | undefined {
   return undefined;
 }
 
-function resolveProductNames(item: any): { ar: string; en: string } {
-  const baseName = firstNonEmptyString(item?.productName, item?.name, item?.title);
+function resolveProductNames(item: unknown): { ar: string; en: string } {
+  const record = item && typeof item === 'object' ? (item as Record<string, unknown>) : {};
+  const productNameValue = record.productName;
+  const nameValue = record.name;
+  const baseName = firstNonEmptyString(
+    typeof productNameValue === 'string' ? productNameValue : undefined,
+    typeof nameValue === 'string' ? nameValue : undefined,
+    typeof record.title === 'string' ? record.title : undefined
+  );
+
+  const nameObject = typeof nameValue === 'object' && nameValue !== null ? (nameValue as Record<string, unknown>) : undefined;
+  const productNameObject = typeof productNameValue === 'object' && productNameValue !== null ? (productNameValue as Record<string, unknown>) : undefined;
 
   const arName = firstNonEmptyString(
-    item?.productNameAr,
-    item?.productNameAR,
-    item?.nameAr,
-    item?.arabicName,
-    item?.name?.ar,
-    item?.productName?.ar,
+    typeof record.productNameAr === 'string' ? record.productNameAr : undefined,
+    typeof record.productNameAR === 'string' ? record.productNameAR : undefined,
+    typeof record.nameAr === 'string' ? record.nameAr : undefined,
+    typeof record.arabicName === 'string' ? record.arabicName : undefined,
+    typeof nameObject?.ar === 'string' ? nameObject.ar : undefined,
+    typeof productNameObject?.ar === 'string' ? productNameObject.ar : undefined,
     baseName
   );
 
   const enName = firstNonEmptyString(
-    item?.productNameEn,
-    item?.productNameEN,
-    item?.nameEn,
-    item?.englishName,
-    item?.productEnglishName,
-    item?.name?.en,
-    item?.productName?.en,
+    typeof record.productNameEn === 'string' ? record.productNameEn : undefined,
+    typeof record.productNameEN === 'string' ? record.productNameEN : undefined,
+    typeof record.nameEn === 'string' ? record.nameEn : undefined,
+    typeof record.englishName === 'string' ? record.englishName : undefined,
+    typeof record.productEnglishName === 'string' ? record.productEnglishName : undefined,
+    typeof nameObject?.en === 'string' ? nameObject.en : undefined,
+    typeof productNameObject?.en === 'string' ? productNameObject.en : undefined,
     baseName
   );
 
@@ -281,26 +291,30 @@ export default function QuickSaleScreen() {
       if (data && data.length > 0) {
         console.log("بيانات المنتجات المستلمة:", data);
 
-        const mappedProducts: Product[] = data.map((item: any) => {
+        const mappedProducts: Product[] = data.map((item) => {
           const names = resolveProductNames(item);
 
-          const totalStock = item.productWarehouses && Array.isArray(item.productWarehouses)
-            ? item.productWarehouses
-                .filter((warehouse: any) => !organization?.warehouseId || warehouse.warehouseId === organization.warehouseId)
-                .reduce((sum: number, w: any) => sum + (w.quantity || 0), 0)
-            : 0;
+          const warehouseList = Array.isArray(item.productWarehouses)
+            ? (item.productWarehouses as Array<{ warehouseId?: number; quantity?: number }>)
+            : [];
+
+          const productWarehouses = warehouseList;
+
+          const totalStock = productWarehouses
+            .filter((warehouse) => !organization?.warehouseId || warehouse.warehouseId === organization.warehouseId)
+            .reduce((sum: number, w) => sum + (w.quantity || 0), 0);
 
           return {
-            id: item.id?.toString() || Math.random().toString(),
+            id: String(item.id ?? Math.random()),
             ar: names.ar,
             en: names.en,
-            price: item.price || item.unitPrice || item.sellingPrice || item.purchasePrice || 0,
+            price: Number(item.price ?? item.unitPrice ?? item.sellingPrice ?? item.purchasePrice ?? 0),
             stock: totalStock,
-            categoryId: item.categoryId ? item.categoryId.toString() : 'all',
+            categoryId: item.categoryId ? String(item.categoryId) : 'all',
             icon: '📦',
-            image: item.imageUrl || generateProductAvatar(names.en || names.ar),
-            barcode: item.barcode || '',
-            code: item.productCode || ''
+            image: typeof item.imageUrl === 'string' ? item.imageUrl : generateProductAvatar(names.en || names.ar),
+            barcode: typeof item.barcode === 'string' ? item.barcode : '',
+            code: typeof item.productCode === 'string' ? item.productCode : ''
           };
         });
 
@@ -595,8 +609,11 @@ export default function QuickSaleScreen() {
       await fetchProducts();
 
       newSale();
-    } catch (error: any) {
-      const serverMessage = error.response?.data?.message;
+    } catch (error: unknown) {
+      const serverMessage =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message)
+          : undefined;
       pushToast('error', serverMessage || t.saleFailed);
       notificationService.notifySales(
         isRtl ? 'فشل إتمام البيع' : 'Sale failed',
@@ -653,8 +670,11 @@ export default function QuickSaleScreen() {
         'success',
         '/clients'
       );
-    } catch (error: any) {
-      const serverMessage = error.response?.data?.message;
+    } catch (error: unknown) {
+      const serverMessage =
+        typeof error === 'object' && error !== null && 'response' in error
+          ? ((error as { response?: { data?: { message?: string } } }).response?.data?.message)
+          : undefined;
       pushToast('error', serverMessage || (isRtl ? 'فشل إضافة العميل' : 'Failed to add customer'));
       notificationService.notifyClient(
         isRtl ? 'فشل إضافة العميل' : 'Customer addition failed',
@@ -683,9 +703,15 @@ export default function QuickSaleScreen() {
           params: { query: customerQuery.trim(), take: 10 },
         });
 
-        const mapped: Customer[] = response.data.map((c: any) => ({
-          id: c.id.toString(),
-          name: c.customerName,
+        const mapped: Customer[] = response.data.map((c: {
+          id: string | number;
+          customerName?: string;
+          phone?: string;
+          mobile?: string;
+          currentBalance?: number;
+        }) => ({
+          id: String(c.id),
+          name: c.customerName ?? '',
           phone: c.phone || c.mobile || '',
           balance: c.currentBalance || 0,
           invoiceCount: 0,

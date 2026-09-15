@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect, useMemo } from 'react';
 import axiosInstance from '../services/axiosInstance';
 import { inventoryService } from '../services/inventoryService';

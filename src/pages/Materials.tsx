@@ -119,6 +119,33 @@ export default function ProductsManagementPage() {
       });
   }, []);
 
+  const animateCounter = (target: number, setCounter: React.Dispatch<React.SetStateAction<number>>) => {
+    if (target <= 0) {
+      setCounter(0);
+      return;
+    }
+    let start = 0;
+    const duration = 1000;
+    const stepTime = Math.max(Math.floor(duration / target), 10);
+    const timer = setInterval(() => {
+      start += Math.ceil(target / 40);
+      if (start >= target) {
+        setCounter(target);
+        clearInterval(timer);
+      } else {
+        setCounter(start);
+      }
+    }, stepTime);
+  };
+
+  const showToast = (message: string, type: Toast['type'] = 'success') => {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 4000);
+  };
+
   // ✅ جلب المنتجات الحقيقية من قاعدة البيانات وربطها بشكل الـ Product المحلي
   useEffect(() => {
     setIsLoading(true);
@@ -187,33 +214,6 @@ export default function ProductsManagementPage() {
     animateCounter(low, setCountLow);
     animateCounter(out, setCountOut);
   }, [products]);
-
-  const animateCounter = (target: number, setCounter: React.Dispatch<React.SetStateAction<number>>) => {
-    if (target <= 0) {
-      setCounter(0);
-      return;
-    }
-    let start = 0;
-    const duration = 1000; 
-    const stepTime = Math.max(Math.floor(duration / target), 10);
-    const timer = setInterval(() => {
-      start += Math.ceil(target / 40);
-      if (start >= target) {
-        setCounter(target);
-        clearInterval(timer);
-      } else {
-        setCounter(start);
-      }
-    }, stepTime);
-  };
-
-  const showToast = (message: string, type: Toast['type'] = 'success') => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4000);
-  };
 
   // ==========================================
   // 4. منطق الفلترة والتحكم بالصلاحيات

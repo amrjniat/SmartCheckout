@@ -20,7 +20,11 @@ import { notificationService } from '../services/notification.service';
    ("مدفوعة" | "غير مدفوعة" | "ملغاة"). لا يوجد "مرتجعة" ولا
    paymentMethod بالباك إند الحقيقي، فحُذفا من هذا الملف بالكامل.
 ========================================================= */
-type OutletCtx = { isRtl: boolean; setIsRtl: (v: boolean) => void; setPageData: React.Dispatch<React.SetStateAction<any>> };
+type OutletCtx = {
+  isRtl: boolean;
+  setIsRtl: (v: boolean) => void;
+  setPageData: React.Dispatch<React.SetStateAction<Record<string, unknown>>>;
+};
 
 const PAGE_SIZE = 8;
 // pageSize كبير لجلب كل الفواتير دفعة واحدة — تُستخدم كمصدر وحيد للبحث/الفلترة/الترتيب/الإحصائيات
@@ -394,10 +398,12 @@ export default function Invoices() {
   const sorted = useMemo(() => {
     const arr = [...filtered];
     arr.sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === 'date') cmp = a.invoiceDate.localeCompare(b.invoiceDate);
-      else if (sortKey === 'total') cmp = a.totalAmount - b.totalAmount;
-      else cmp = a.customerName.localeCompare(b.customerName);
+      const cmp =
+        sortKey === 'date'
+          ? a.invoiceDate.localeCompare(b.invoiceDate)
+          : sortKey === 'total'
+            ? a.totalAmount - b.totalAmount
+            : a.customerName.localeCompare(b.customerName);
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return arr;

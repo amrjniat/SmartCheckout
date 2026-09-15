@@ -197,31 +197,45 @@ export default function Dashboard() {
 
       // ✅ استخراج آمن لمصفوفة الفواتير مهما كان شكل الـ response
       // (يدعم: array مباشرة، { data: [...] }, { invoices: [...] })
-      const salesArray: any[] = Array.isArray(salesRes.data)
-        ? salesRes.data
-        : salesRes.data?.data ?? salesRes.data?.invoices ?? [];
+      type SalesApiItem = {
+        invoiceDate: string;
+        invoiceNumber: string | number;
+        customerName?: string;
+        totalAmount?: number | string;
+        status?: string;
+      };
+
+      const salesArray: SalesApiItem[] = Array.isArray(salesRes.data)
+        ? (salesRes.data as SalesApiItem[])
+        : ((salesRes.data?.data ?? salesRes.data?.invoices ?? []) as SalesApiItem[]);
 
       const latestTransactions = [...salesArray]
-        .sort((a: any, b: any) => new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime())
+        .sort((a, b) => new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime())
         .slice(0, 5)
-        .map((inv: any) => ({
-          id: inv.invoiceNumber,
-          clientKey: inv.customerName,
+        .map((inv) => ({
+          id: String(inv.invoiceNumber),
+          clientKey: inv.customerName ?? '—',
           time: new Date(inv.invoiceDate).toLocaleTimeString(isRtl ? 'ar' : 'en', { hour: '2-digit', minute: '2-digit' }),
-          total: Number(inv.totalAmount).toLocaleString(),
-          status: normalizeInvoiceStatus(inv.status) === 'مدفوعة' ? 'paid' : 'pending'
+          total: Number(inv.totalAmount ?? 0).toLocaleString(),
+          status: normalizeInvoiceStatus(inv.status ?? '') === 'مدفوعة' ? 'paid' : 'pending'
         }));
 
       // ✅ استخراج آمن لمصفوفة المنتجات الأكثر مبيعاً
       // (يدعم: array مباشرة، { products: [...] }, { data: [...] })
-      const productsArray: any[] = Array.isArray(topProductsRes.data)
-        ? topProductsRes.data
-        : topProductsRes.data?.products ?? topProductsRes.data?.data ?? [];
+      type TopProductApiItem = {
+        productName?: string;
+        totalQuantity?: number | string;
+        percentage?: number | string;
+      };
 
-      const topProducts = productsArray.map((p: any) => ({
-        nameKey: p.productName,
-        salesCount: `${p.totalQuantity} ${isRtl ? 'قطعة' : 'pcs'}`,
-        percentage: p.percentage
+      const productsArray: TopProductApiItem[] = Array.isArray(topProductsRes.data)
+        ? (topProductsRes.data as TopProductApiItem[])
+        : ((topProductsRes.data?.products ?? topProductsRes.data?.data ?? []) as TopProductApiItem[]);
+
+      const topProducts = productsArray.map((p) => ({
+        nameKey: p.productName ?? '—',
+        salesCount: `${p.totalQuantity ?? 0} ${isRtl ? 'قطعة' : 'pcs'}`,
+        percentage: Number(p.percentage ?? 0)
       }));
 
       setCurrentData({
@@ -233,7 +247,7 @@ export default function Dashboard() {
         transactions: latestTransactions
       });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Dashboard fetch error:', err);
     }
   }, [activeFilter, isRtl]); 
