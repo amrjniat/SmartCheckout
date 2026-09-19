@@ -726,7 +726,7 @@ export function Hero() {
                 <img
                   src={HERO_IMG}
                   alt="POSWAVE Dashboard"
-                  className="w-full rounded-2xl glass-strong p-2 shadow-2xl"
+                  className="image-lift w-full rounded-2xl glass-strong p-2 shadow-2xl"
                 />
                 {/* Floating accent cards */}
                 <div
@@ -821,7 +821,7 @@ export function Screenshots() {
               <img
                 src={screenshots[active].img}
                 alt={screenshots[active].title}
-                className="w-full rounded-xl"
+                className="image-lift w-full rounded-xl"
               />
             </div>
             <div className="text-center mt-6">

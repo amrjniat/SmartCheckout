@@ -134,6 +134,21 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       return;
     }
 
+    const numericFields: Array<keyof Pick<ProductFormData, 'purchasePrice' | 'sellingPrice' | 'taxRate' | 'minStock' | 'initialQuantity'>> = [
+      'purchasePrice',
+      'sellingPrice',
+      'taxRate',
+      'minStock',
+      'initialQuantity',
+    ];
+    const hasInvalidNumber = numericFields.some(
+      (field) => !Number.isFinite(formData[field]) || formData[field] < 0
+    );
+    if (hasInvalidNumber) {
+      setErrorMessage('يرجى إدخال قيم رقمية صحيحة وغير سالبة.');
+      return;
+    }
+
     setIsSaving(true);
     try {
       const response =

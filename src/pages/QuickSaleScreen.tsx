@@ -250,6 +250,32 @@ function resolveProductNames(item: unknown): { ar: string; en: string } {
   };
 }
 
+function resolveCategoryId(item: {
+  category?: string | { categoryName?: string; name?: string } | null;
+  categoryName?: string;
+  categoryId?: number | string;
+}): string {
+  const categoryValue = item.category;
+  const categoryName = typeof categoryValue === 'string'
+    ? categoryValue
+    : categoryValue?.categoryName || categoryValue?.name || item.categoryName || '';
+  const normalizedName = categoryName.trim().toLowerCase();
+
+  const categoryAliases: Record<string, string[]> = {
+    drinks: ['مشروبات', 'مشروب', 'drinks', 'drink'],
+    sweets: ['حلويات', 'حلوى', 'sweets', 'sweet'],
+    dairy: ['ألبان', 'البان', 'لبنيات', 'dairy', 'milk'],
+    cleaning: ['منظفات', 'منظف', 'cleaning', 'cleaners'],
+    bakery: ['مخبوزات', 'مخبوز', 'bakery', 'baked goods'],
+  };
+
+  const matchingCategory = Object.entries(categoryAliases).find(([, aliases]) =>
+    aliases.some((alias) => normalizedName === alias || normalizedName.includes(alias))
+  );
+
+  return matchingCategory?.[0] || (item.categoryId ? String(item.categoryId) : 'all');
+}
+
 interface LayoutContext {
   isRtl: boolean;
   setIsRtl: (value: boolean) => void;
@@ -310,7 +336,7 @@ export default function QuickSaleScreen() {
             en: names.en,
             price: Number(item.price ?? item.unitPrice ?? item.sellingPrice ?? item.purchasePrice ?? 0),
             stock: totalStock,
-            categoryId: item.categoryId ? String(item.categoryId) : 'all',
+            categoryId: resolveCategoryId(item),
             icon: '📦',
             image: typeof item.imageUrl === 'string' ? item.imageUrl : generateProductAvatar(names.en || names.ar),
             barcode: typeof item.barcode === 'string' ? item.barcode : '',
@@ -333,6 +359,19 @@ export default function QuickSaleScreen() {
 
   useEffect(() => {
     fetchProducts();
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') fetchProducts();
+    };
+
+    window.addEventListener('focus', refreshWhenVisible);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      window.removeEventListener('focus', refreshWhenVisible);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, [fetchProducts]);
 
   useEffect(() => {
